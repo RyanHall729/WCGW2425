@@ -113,11 +113,11 @@ public class Auto extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);
+        encoderDrive(DRIVE_SPEED,  90,  90, 6.0);
         currentStage++;// S1: Forward 47 Inches with 5 Sec timeout
         encoderDrive(TURN_SPEED,   12, -12, 4.0);
         currentStage++;// S2: Turn Right 12 Inches with 4 Sec timeout
-        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);
+        encoderDrive(DRIVE_SPEED, 70, 70, 5.0);
         currentStage++;// S3: Reverse 24 Inches with 4 Sec timeout
 
         telemetry.addData("Path", "Complete");
@@ -138,11 +138,7 @@ public class Auto extends LinearOpMode {
                              double timeoutS) {
         int newLeftTargetFront;
         int newRightTargetFront;
-        int newLeftTargetBack;
-
-        int newRightTargetBack;
-
-
+        
         // Ensure that the OpMode is still active
         if (opModeIsActive()) {
 
@@ -150,13 +146,13 @@ public class Auto extends LinearOpMode {
             // Determine new target position, and pass to motor controller
             newLeftTargetFront = drive.leftFront.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
             newRightTargetFront = drive.rightFront.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            newLeftTargetBack = drive.rightBack.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            newLeftTargetBack = drive.leftBack.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newRightTargetFront = drive.rightBack.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newLeftTargetFront = drive.leftBack.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
 
             drive.leftFront.setTargetPosition(newLeftTargetFront);
             drive.rightFront.setTargetPosition(newRightTargetFront);
-            drive.leftBack.setTargetPosition(newLeftTargetBack);
-            drive.rightBack.setTargetPosition(newLeftTargetBack);
+            drive.leftBack.setTargetPosition(newLeftTargetFront);
+            drive.rightBack.setTargetPosition(newRightTargetFront);
 
 
             //todo: add all motors (done)
