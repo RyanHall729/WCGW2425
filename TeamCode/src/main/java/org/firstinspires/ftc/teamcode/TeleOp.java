@@ -71,29 +71,20 @@ public class TeleOp extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
     private ElapsedTime intakeStopwatch = new ElapsedTime();
-    public DcMotor leftFront = null;
-    public DcMotor leftBack = null;
-    public DcMotor rightFront = null;
-    public DcMotor rightBack = null;
-    public Servo extender = null;
-    //public CRServo intake = null;
+   //Drive drive = null;
+    Intake intake = null;
+
     @Override
     public void runOpMode() {
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
-
-        extender = hardwareMap.get(Servo.class, "extender");
-        extender.setPosition(0);
+        //drive = new Drive(hardwareMap);
+        intake = new Intake(hardwareMap);
+        intake.extender.setPosition(0);
 
 
-//        intake.wrist = hardwareMap.get(DcMotor.class, "wrist");
-//        intake = hardwareMap.get(CRServo.class, "intake");
-//        intake.tilt = hardwareMap.get(Servo.class, "tilt");
+
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -105,10 +96,7 @@ public class TeleOp extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        leftFront.setDirection(DcMotor.Direction.FORWARD);
-        leftBack.setDirection(DcMotor.Direction.FORWARD);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
+
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -164,19 +152,19 @@ public class TeleOp extends LinearOpMode {
             */
 
             // Send calculated power to wheels
-            leftFront.setPower(leftFrontPower);
-            rightFront.setPower(rightFrontPower);
-            leftBack.setPower(leftBackPower);
-            rightBack.setPower(rightBackPower);
+//            leftFront.setPower(leftFrontPower);
+//            rightFront.setPower(rightFrontPower);
+//            leftBack.setPower(leftBackPower);
+//            rightBack.setPower(rightBackPower);
 
             //intake
             if (gamepad1.x)
             {
-                extender.setPosition(1);
+                intake.extender.setPosition(1);
             }
             else if (gamepad1.b)
             {
-                extender.setPosition(0);
+                intake.extender.setPosition(0);
             }
 
             // Show the elapsed game time and wheel power.

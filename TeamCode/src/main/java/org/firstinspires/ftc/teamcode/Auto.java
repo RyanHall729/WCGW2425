@@ -61,8 +61,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Robot: Auto Drive By Encoder", group="Robot")
-//@Disabled
+@Autonomous(name="Auto", group="Robot")
+@Disabled
 public class Auto extends LinearOpMode {
 
     /* Declare OpMode members. */
@@ -84,6 +84,7 @@ public class Auto extends LinearOpMode {
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double     DRIVE_SPEED             = 0.6;
     static final double     TURN_SPEED              = 0.5;
+    int currentStage = 0;
 
     @Override
     public void runOpMode() {
@@ -99,10 +100,12 @@ public class Auto extends LinearOpMode {
 
 
         // Send telemetry message to indicate successful Encoder reset
-        //todo: add all motors to this telemetry
-        telemetry.addData("Starting at",  "%7d :%7d",
-                          leftFront.getCurrentPosition(),
-                          rightFront.getCurrentPosition());
+        //todo: add all motors to this telemetry (done)
+        telemetry.addData("Starting at",  "%7d :%7d :%7d :%7d",
+                drive.leftFront.getCurrentPosition(),
+                drive.leftBack.getCurrentPosition(),
+                drive.rightFront.getCurrentPosition(),
+                drive.rightFront.getCurrentPosition());
         telemetry.update();
 
         // Wait for the game to start (driver presses START)
@@ -110,9 +113,12 @@ public class Auto extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDrive(TURN_SPEED,   12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
-        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);
+        currentStage++;// S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(TURN_SPEED,   12, -12, 4.0);
+        currentStage++;// S2: Turn Right 12 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);
+        currentStage++;// S3: Reverse 24 Inches with 4 Sec timeout
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -130,21 +136,30 @@ public class Auto extends LinearOpMode {
     public void encoderDrive(double speed,
                              double leftInches, double rightInches,
                              double timeoutS) {
-        int newLeftTarget;
-        int newRightTarget;
+        int newLeftTargetFront;
+        int newRightTargetFront;
+        int newLeftTargetBack;
+
+        int newRightTargetBack;
+
 
         // Ensure that the OpMode is still active
         if (opModeIsActive()) {
 
             //todo: wait on this until i figure this stuff out lmao
             // Determine new target position, and pass to motor controller
-            newLeftTarget = leftFront.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
-            newRightTarget = rightFront.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            leftFront.setTargetPosition(newLeftTarget);
-            rightFront.setTargetPosition(newRightTarget);
+            newLeftTargetFront = drive.leftFront.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newRightTargetFront = drive.rightFront.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newLeftTargetBack = drive.rightBack.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newLeftTargetBack = drive.leftBack.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+
+            drive.leftFront.setTargetPosition(newLeftTargetFront);
+            drive.rightFront.setTargetPosition(newRightTargetFront);
+            drive.leftBack.setTargetPosition(newLeftTargetBack);
+            drive.rightBack.setTargetPosition(newLeftTargetBack);
 
 
-            //todo: add all motors
+            //todo: add all motors (done)
             // Turn On RUN_TO_POSITION
             drive.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             drive.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -171,21 +186,29 @@ public class Auto extends LinearOpMode {
                    (drive.leftFront.isBusy() && drive.leftBack.isBusy() && drive.rightFront.isBusy() && drive.rightBack.isBusy())) {
 
                 // Display it for the driver.
-                telemetry.addData("Running to",  " %7d :%7d", newLeftTarget,  newRightTarget);
-                telemetry.addData("Currently at",  " at %7d :%7d",
-                                            leftFront.getCurrentPosition(), rightFront.getCurrentPosition());
+                telemetry.addData("Running to",  " %7d :%7d :%7d :7d", newLeftTargetFront,  newRightTargetFront);
+                telemetry.addData("currently at",  " %7d :%7d :%7d :7d",
+                        drive.leftFront.getCurrentPosition(),
+                        drive.leftBack.getCurrentPosition(),
+                        drive.rightFront.getCurrentPosition(),
+                        drive.rightFront.getCurrentPosition());
                 telemetry.update();
+
             }
 
             // Stop all motion;
-            leftFront.setPower(0);
-            rightFront.setPower(0);
+            drive.rightBack.setPower(0);
+            drive.rightFront.setPower(0);
+            drive.leftBack.setPower(0);
+            drive.leftFront.setPower(0);
 
             // Turn off RUN_TO_POSITION
-            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            drive.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            drive.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            drive.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            drive.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            sleep(250);   // optional pause after each move.
+            //sleep(250);   // optional pause after each move.
         }
     }
 }
