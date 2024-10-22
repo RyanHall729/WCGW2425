@@ -75,8 +75,8 @@ public class TeleOp extends LinearOpMode {
     public DcMotor leftBack = null;
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
-    public Servo extender = null;
-    //public CRServo intake = null;
+//    public Servo extender = null;
+    public CRServo intake = null;
     @Override
     public void runOpMode() {
 
@@ -87,8 +87,8 @@ public class TeleOp extends LinearOpMode {
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
-        extender = hardwareMap.get(Servo.class, "extender");
-        extender.setPosition(0);
+        intake = hardwareMap.get(CRServo.class, "intake");
+        //extender.setPosition(0);
 
 
 //        intake.wrist = hardwareMap.get(DcMotor.class, "wrist");
@@ -172,11 +172,11 @@ public class TeleOp extends LinearOpMode {
             //intake
             if (gamepad1.x)
             {
-                extender.setPosition(1);
+                intake.setPower(1);
             }
             else if (gamepad1.b)
             {
-                extender.setPosition(0);
+                intake.setPower(0);
             }
 
             // Show the elapsed game time and wheel power.
