@@ -78,7 +78,7 @@ public class Auto extends LinearOpMode {
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
     static final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // eg: Neverest 20
-    static final double     DRIVE_GEAR_REDUCTION    = 19.2 ;     // External Gearing.
+    static final double     DRIVE_GEAR_REDUCTION    = 1;     // External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 3.93701 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
@@ -137,8 +137,10 @@ public class Auto extends LinearOpMode {
                              double leftInches, double rightInches,
                              double timeoutS) {
         int newLeftTargetFront;
+        int newLeftTargetBack;
         int newRightTargetFront;
-        
+        int newRightTargetBack;
+
         // Ensure that the OpMode is still active
         if (opModeIsActive()) {
 
@@ -146,13 +148,14 @@ public class Auto extends LinearOpMode {
             // Determine new target position, and pass to motor controller
             newLeftTargetFront = drive.leftFront.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
             newRightTargetFront = drive.rightFront.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            newRightTargetFront = drive.rightBack.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            newLeftTargetFront = drive.leftBack.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newRightTargetBack = drive.rightBack.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newLeftTargetBack = drive.leftBack.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+
 
             drive.leftFront.setTargetPosition(newLeftTargetFront);
             drive.rightFront.setTargetPosition(newRightTargetFront);
-            drive.leftBack.setTargetPosition(newLeftTargetFront);
-            drive.rightBack.setTargetPosition(newRightTargetFront);
+            drive.leftBack.setTargetPosition(newLeftTargetBack);
+            drive.rightBack.setTargetPosition(newRightTargetBack);
 
 
             //todo: add all motors (done)
