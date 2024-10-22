@@ -61,7 +61,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Robot: Auto Drive By Encoder", group="Robot")
+@Autonomous(name="Robot: AutoSink", group="Robot")
 //@Disabled
 public class Auto extends LinearOpMode {
 
@@ -82,7 +82,7 @@ public class Auto extends LinearOpMode {
     static final double     WHEEL_DIAMETER_INCHES   = 3.93701 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     DRIVE_SPEED             = 0.6;
+    static final double     DRIVE_SPEED             = 0.3;
     static final double     TURN_SPEED              = 0.5;
 
     @Override
@@ -99,10 +99,11 @@ public class Auto extends LinearOpMode {
 
 
         // Send telemetry message to indicate successful Encoder reset
-        //todo: add all motors to this telemetry
         telemetry.addData("Starting at",  "%7d :%7d",
-                          leftFront.getCurrentPosition(),
-                          rightFront.getCurrentPosition());
+                          drive.leftFront.getCurrentPosition(),
+                          drive.leftBack.getCurrentPosition(),
+                          drive.rightFront.getCurrentPosition(),
+                          drive.rightBack.getCurrentPosition());
         telemetry.update();
 
         // Wait for the game to start (driver presses START)
@@ -110,9 +111,9 @@ public class Auto extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDrive(TURN_SPEED,   12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
-        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  .08,  .05, 4.0);  // S1: Forward 47 Inches with 5 Sec timeout
+//        encoderDrive(TURN_SPEED,   .25, -.25, 0.25);  // S2: Turn Right 12 Inches with 4 Sec timeout
+//        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -130,22 +131,30 @@ public class Auto extends LinearOpMode {
     public void encoderDrive(double speed,
                              double leftInches, double rightInches,
                              double timeoutS) {
-        int newLeftTarget;
-        int newRightTarget;
+        int newLeftFrontTarget;
+        int newLeftBackTarget;
+        int newRightFrontTarget;
+        int newRightBackTarget;
 
         // Ensure that the OpMode is still active
         if (opModeIsActive()) {
 
-            //todo: wait on this until i figure this stuff out lmao
-            // Determine new target position, and pass to motor controller
-            newLeftTarget = leftFront.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
-            newRightTarget = rightFront.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-            leftFront.setTargetPosition(newLeftTarget);
-            rightFront.setTargetPosition(newRightTarget);
+            newLeftFrontTarget = drive.leftFront.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newLeftBackTarget = drive.leftBack.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
+            newRightFrontTarget = drive.rightFront.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+            newRightBackTarget = drive.rightBack.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
+
+            drive.leftFront.setTargetPosition(newLeftFrontTarget);
+//            drive.leftBack.setTargetPosition(newLeftBackTarget);
+            drive.leftBack.setTargetPosition(newLeftFrontTarget);
+            drive.rightFront.setTargetPosition(newRightFrontTarget);
+//            drive.rightBack.setTargetPosition(newRightBackTarget);
+            drive.rightBack.setTargetPosition(newRightFrontTarget);
 
 
-            //todo: add all motors
-            // Turn On RUN_TO_POSITION
+
+
+
             drive.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             drive.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             drive.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -165,25 +174,30 @@ public class Auto extends LinearOpMode {
             // However, if you require that BOTH motors have finished their moves before the robot continues
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
 
-            //todo: add all motors
             while (opModeIsActive() &&
                    (runtime.seconds() < timeoutS) &&
                    (drive.leftFront.isBusy() && drive.leftBack.isBusy() && drive.rightFront.isBusy() && drive.rightBack.isBusy())) {
 
                 // Display it for the driver.
-                telemetry.addData("Running to",  " %7d :%7d", newLeftTarget,  newRightTarget);
+//                telemetry.addData("Running to",  " %7d :%7d", newLeftFrontTarget,  newRightTarget);
                 telemetry.addData("Currently at",  " at %7d :%7d",
-                                            leftFront.getCurrentPosition(), rightFront.getCurrentPosition());
+                        drive.leftFront.getCurrentPosition(),
+                        drive.leftBack.getCurrentPosition(),
+                        drive.rightFront.getCurrentPosition(),
+                        drive.rightBack.getCurrentPosition());
                 telemetry.update();
             }
 
             // Stop all motion;
-            leftFront.setPower(0);
-            rightFront.setPower(0);
+            drive.leftFront.setPower(0);
+            drive.leftBack.setPower(0);
+            drive.rightFront.setPower(0);
+            drive.rightBack.setPower(0);
 
             // Turn off RUN_TO_POSITION
-            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            drive.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            drive.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            drive.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
             sleep(250);   // optional pause after each move.
         }
