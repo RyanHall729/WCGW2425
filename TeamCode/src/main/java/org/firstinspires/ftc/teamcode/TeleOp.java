@@ -169,12 +169,14 @@ public class TeleOp extends LinearOpMode {
             leftBack.setPower(leftBackPower);
             rightBack.setPower(rightBackPower);
 
+            //todo add debug mode
             //intake
             if (gamepad1.x)
             {
                 intake.setPower(1);
+                intakeStopwatch.reset();
             }
-            else if (gamepad1.b)
+            else if (intakeStopwatch.seconds() >= 4)
             {
                 intake.setPower(0);
             }
