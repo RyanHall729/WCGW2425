@@ -173,10 +173,10 @@ public class TeleOp extends LinearOpMode {
             //intake
             if (gamepad1.x)
             {
-                intake.setPower(1);
+                intake.setPower(-1);
                 intakeStopwatch.reset();
             }
-            else if (intakeStopwatch.seconds() >= 4)
+            else if (intakeStopwatch.seconds() >= 2.05)
             {
                 intake.setPower(0);
             }
