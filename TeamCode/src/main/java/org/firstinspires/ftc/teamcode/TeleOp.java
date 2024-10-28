@@ -31,8 +31,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -77,6 +75,8 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightBack = null;
 //    public Servo extender = null;
     public CRServo intake = null;
+    public boolean isDebugging = false;
+    public boolean isOutaking = false;
     @Override
     public void runOpMode() {
 
@@ -112,13 +112,17 @@ public class TeleOp extends LinearOpMode {
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
-        telemetry.update();
 
+
+
+        telemetry.update();
         waitForStart();
         runtime.reset();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+
+
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
@@ -170,7 +174,7 @@ public class TeleOp extends LinearOpMode {
             rightBack.setPower(rightBackPower);
 
             //todo add debug mode
-            //intake
+            //intake consume
             if (gamepad1.x)
             {
                 intake.setPower(-1);
@@ -181,10 +185,26 @@ public class TeleOp extends LinearOpMode {
                 intake.setPower(0);
             }
 
+            //outake
+            if (gamepad1.b)
+            {
+                intake.setPower(1);
+                intakeStopwatch.reset();
+                isOutaking = true;
+            }
+            else if (intakeStopwatch.seconds() >= 10 && isOutaking)
+            {
+                intake.setPower(0);
+                isOutaking = false;
+            }
+
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("Is outake Active:", isOutaking);
+            telemetry.addData("intake:", intake.getPower());
+
             //telemetry.addData("intake", intake.getPower());
             telemetry.update();
         }
