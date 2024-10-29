@@ -5,8 +5,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public class Intake {
-    public DcMotor wrist = null;
-    public Servo tilt = null;
+    public DcMotor tilter = null;
+    public Servo wrist = null;
     public CRServo intake = null;
 
 }

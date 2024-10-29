@@ -69,12 +69,15 @@ public class TeleOp extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
     private ElapsedTime runtime = new ElapsedTime();
     private ElapsedTime intakeStopwatch = new ElapsedTime();
-    public DcMotor leftFront = null;
-    public DcMotor leftBack = null;
-    public DcMotor rightFront = null;
-    public DcMotor rightBack = null;
+//    public DcMotor leftFront = null;
+//    public DcMotor leftBack = null;
+//    public DcMotor rightFront = null;
+//    public DcMotor rightBack = null;
 //    public Servo extender = null;
-    public CRServo intake = null;
+    public Drive drive = null;
+    public Intake intake = null;
+    public DcMotor tilter = null;
+//    public CRServo intake = null;
     public boolean isDebugging = false;
     public boolean isOutaking = false;
     @Override
@@ -82,12 +85,12 @@ public class TeleOp extends LinearOpMode {
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+//        drive.leftFront = hardwareMap.get(DcMotor.class, "leftFront");
+//        drive.leftBack = hardwareMap.get(DcMotor.class, "leftBack");
+//        drive.rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+//        drive.rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
-        intake = hardwareMap.get(CRServo.class, "intake");
+//        intake = hardwareMap.get(CRServo.class, "intake");
         //extender.setPosition(0);
 
 
@@ -105,10 +108,10 @@ public class TeleOp extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        leftFront.setDirection(DcMotor.Direction.FORWARD);
-        leftBack.setDirection(DcMotor.Direction.FORWARD);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
+//        drive.leftFront.setDirection(DcMotor.Direction.FORWARD);
+//        drive.leftBack.setDirection(DcMotor.Direction.FORWARD);
+//        drive.rightFront.setDirection(DcMotor.Direction.REVERSE);
+//        drive.rightBack.setDirection(DcMotor.Direction.REVERSE);
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -168,42 +171,49 @@ public class TeleOp extends LinearOpMode {
             */
 
             // Send calculated power to wheels
-            leftFront.setPower(leftFrontPower);
-            rightFront.setPower(rightFrontPower);
-            leftBack.setPower(leftBackPower);
-            rightBack.setPower(rightBackPower);
+//            drive.leftFront.setPower(leftFrontPower);
+//            drive.rightFront.setPower(rightFrontPower);
+//            drive.leftBack.setPower(leftBackPower);
+//            drive.rightBack.setPower(rightBackPower);
 
-            //todo add debug mode
-            //intake consume
+            //intake
             if (gamepad1.x)
             {
-                intake.setPower(-1);
+                intake.intake.setPower(-1);
                 intakeStopwatch.reset();
             }
             else if (intakeStopwatch.seconds() >= 2.05)
             {
-                intake.setPower(0);
+                intake.intake.setPower(0);
             }
 
             //outake
             if (gamepad1.b)
             {
-                intake.setPower(1);
+                intake.intake.setPower(1);
                 intakeStopwatch.reset();
                 isOutaking = true;
             }
             else if (intakeStopwatch.seconds() >= 10 && isOutaking)
             {
-                intake.setPower(0);
+                intake.intake.setPower(0);
                 isOutaking = false;
             }
-
+            //tilter
+            if (gamepad1.dpad_up)
+            {
+                tilter.setPower(1);
+            }
+            else if (gamepad1.dpad_down)
+            {
+                tilter.setPower(0);
+            }
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Is outake Active:", isOutaking);
-            telemetry.addData("intake:", intake.getPower());
+            telemetry.addData("intake:", intake.intake.getPower());
 
             //telemetry.addData("intake", intake.getPower());
             telemetry.update();
