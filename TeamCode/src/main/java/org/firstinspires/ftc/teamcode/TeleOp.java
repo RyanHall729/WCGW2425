@@ -29,8 +29,10 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -80,9 +82,15 @@ public class TeleOp extends LinearOpMode {
     public DcMotor leftBack = null;
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
-//    public CRServo intake = null;
-//    public DcMotor tilter = null;
+    public CRServo intake = null;
+    public DcMotor tilter = null;
+    public ElapsedTime intakeStopwatch = null;
+    public ElapsedTime tilterStopwatch = null;
+//    public Servo extender = null;
     public boolean isOutaking = false;
+    public boolean isTiltingUp = false;
+    public boolean isTiltingDown = false;
+    public IMU imu = null;
     @Override
     public void runOpMode() {
 
@@ -93,12 +101,20 @@ public class TeleOp extends LinearOpMode {
         rightFront = hardwareMap.get(DcMotor.class, "rightFront");
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
+        intakeStopwatch = new ElapsedTime();
+        tilterStopwatch = new ElapsedTime();
 //        intake = hardwareMap.get(CRServo.class, "intake");
         //extender.setPosition(0);
 
 
-//        tilter = hardwareMap.get(DcMotor.class, "tilter");
-////        intake = hardwareMap.get(CRServo.class, "intake");
+        tilter = hardwareMap.get(DcMotor.class, "tilter");
+        intake = hardwareMap.get(CRServo.class, "intake");
+
+        imu = hardwareMap.get(IMU.class, "imu");
+        RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        IMU.Parameters parameters = new IMU.Parameters(hubOrientationOnRobot);
+        imu.initialize(parameters);
+
 //        extender = hardwareMap.get(Servo.class, "extender");
 
         // ########################################################################################
@@ -187,51 +203,62 @@ public class TeleOp extends LinearOpMode {
 //            else if (gamepad1.y)
 //            {
 //                extender.setPosition(0);
-//            }
+//
 
             //intake
-//            if (gamepad1.x)
-//            {
-//                intake.setPower(-1);
-//                intakeStopwatch.reset();
-//            }
-//            else if (intakeStopwatch.seconds() >= 2.05)
-//            {
-//                intake.setPower(0);
-//            }
+            if (gamepad1.x)
+            {
+                intake.setPower(-1);
+                intakeStopwatch.reset();
+            }
+            else if (intakeStopwatch.seconds() >= 2.05)
+            {
+                intake.setPower(0);
+            }
 
             //outake
-//            if (gamepad1.b)
-//            {
-//                intake.setPower(1);
-//                intakeStopwatch.reset();
-//                isOutaking = true;
-//            }
-//            else if (intakeStopwatch.seconds() >= 10 && isOutaking)
-//            {
-//                intake.setPower(0);
-//                isOutaking = false;
-//            }
+            if (gamepad1.b)
+            {
+                intake.setPower(1);
+                intakeStopwatch.reset();
+                isOutaking = true;
+            }
+            else if (intakeStopwatch.seconds() >= 5 && isOutaking)
+            {
+                intake.setPower(0);
+                isOutaking = false;
+            }
             //tilter
-//            if (gamepad1.dpad_up)
-//            {
-//                tilter.setPower(1);
-//                tilterStopwatch.reset();
-//            }
-//            else if (tilterStopwatch.seconds() >= 15)
-//            {
-//                tilter.setPower(0);
-//            }
-//            else if (gamepad1.dpad_down)
-//            {
-//                tilter.setPower(-1);
-//            }
+            if (gamepad1.dpad_up)
+            {
+                tilter.setPower(1);
+                tilterStopwatch.reset();
+                isTiltingUp = true;
+            }
+            else if (tilterStopwatch.seconds() >= 15 && isTiltingUp)
+            {
+                tilter.setPower(0);
+                isTiltingUp = false;
+            }
+            else if (gamepad1.dpad_down)
+            {
+                tilter.setPower(-1);
+                isTiltingDown = true;
+            }
+            else if (tilterStopwatch.seconds() >= 15 && isTiltingDown)
+            {
+                tilter.setPower(0);
+                isTiltingDown = false;
+            }
+
+
             // Show the elapsed game time and wheel power.
 //            telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Is outake Active:", isOutaking);
-//            telemetry.addData("intake:", intake.getPower());
+            telemetry.addData("intake:", intake.getPower());
+            telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
 
             //telemetry.addData("intake", intake.getPower());
             telemetry.update();
