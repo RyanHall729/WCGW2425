@@ -35,6 +35,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.util.Base64;
+
 /*
  * This OpMode illustrates the concept of driving a path based on encoder counts.
  * The code is structured as a LinearOpMode
@@ -78,7 +80,7 @@ public class Auto extends LinearOpMode {
     // This is gearing DOWN for less speed and more torque.
     // For gearing UP, use a gear ratio less than 1.0. Note this will affect the direction of wheel rotation.
     static final double     COUNTS_PER_MOTOR_REV    = 537.6 ;    // eg: Neverest 20
-    static final double     DRIVE_GEAR_REDUCTION    = 19.2 ;     // External Gearing.
+    static final double     DRIVE_GEAR_REDUCTION    = 1;     // External Gearing.
     static final double     WHEEL_DIAMETER_INCHES   = 3.93701 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
@@ -111,9 +113,13 @@ public class Auto extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  .08,  .05, 4.0);  // S1: Forward 47 Inches with 5 Sec timeout
-//        encoderDrive(TURN_SPEED,   .25, -.25, 0.25);  // S2: Turn Right 12 Inches with 4 Sec timeout
-//        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  -1,  1, 4.0);
+        encoderDrive(DRIVE_SPEED, 90, 90, 4.0);
+        encoderDrive(DRIVE_SPEED, -1, 1, 4.0);
+        encoderDrive(DRIVE_SPEED, 45.5, 45.5, 4.0);
+        encoderDrive(DRIVE_SPEED, -1, 1, 4.0);
+        encoderDrive(DRIVE_SPEED, 19, 19, 4.0);
+
 
         telemetry.addData("Path", "Complete");
         telemetry.update();
@@ -189,10 +195,7 @@ public class Auto extends LinearOpMode {
             }
 
             // Stop all motion;
-            drive.leftFront.setPower(0);
-            drive.leftBack.setPower(0);
-            drive.rightFront.setPower(0);
-            drive.rightBack.setPower(0);
+            stopAllMovement();
 
             // Turn off RUN_TO_POSITION
             drive.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -201,5 +204,15 @@ public class Auto extends LinearOpMode {
 
             sleep(250);   // optional pause after each move.
         }
+
+
+    }
+    public void stopAllMovement()
+    {
+        drive.leftFront.setPower(0);
+        drive.leftBack.setPower(0);
+        drive.rightFront.setPower(0);
+        drive.rightBack.setPower(0);
+
     }
 }

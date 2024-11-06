@@ -251,6 +251,10 @@ public class TeleOp extends LinearOpMode {
                 isTiltingDown = false;
             }
 
+            //get rotation
+            //turn the robot
+            // apply power to specific wheels
+
 
             // Show the elapsed game time and wheel power.
 //            telemetry.addData("Status", "Run Time: " + runtime.toString());
