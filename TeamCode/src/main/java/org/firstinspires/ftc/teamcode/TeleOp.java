@@ -33,7 +33,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -83,7 +82,8 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
     public CRServo intake = null;
-    public DcMotor tilter = null;
+    public DcMotor tilterUp = null;
+    public DcMotor tilterDown = null;
     public ElapsedTime intakeStopwatch = null;
     public ElapsedTime tilterStopwatch = null;
 //    public Servo extender = null;
@@ -107,7 +107,8 @@ public class TeleOp extends LinearOpMode {
         //extender.setPosition(0);
 
 
-        tilter = hardwareMap.get(DcMotor.class, "tilter");
+        tilterUp = hardwareMap.get(DcMotor.class, "tilterUp");
+        tilterDown = hardwareMap.get(DcMotor.class,"tilterDown" );
         intake = hardwareMap.get(CRServo.class, "intake");
 
         imu = hardwareMap.get(IMU.class, "imu");
@@ -228,26 +229,28 @@ public class TeleOp extends LinearOpMode {
                 intake.setPower(0);
                 isOutaking = false;
             }
-            //tilter
+            //tilterup
             if (gamepad1.dpad_up)
             {
-                tilter.setPower(1);
+                tilterUp.setPower(1);
                 tilterStopwatch.reset();
                 isTiltingUp = true;
             }
             else if (tilterStopwatch.seconds() >= 15 && isTiltingUp)
             {
-                tilter.setPower(0);
+                tilterUp.setPower(0);
                 isTiltingUp = false;
             }
-            else if (gamepad1.dpad_down)
+            //tilterdown
+            if (gamepad1.dpad_down)
             {
-                tilter.setPower(-1);
+                tilterDown.setPower(-1);
+                tilterStopwatch.reset();
                 isTiltingDown = true;
             }
             else if (tilterStopwatch.seconds() >= 15 && isTiltingDown)
             {
-                tilter.setPower(0);
+                tilterDown .setPower(0);
                 isTiltingDown = false;
             }
 
