@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -110,6 +111,8 @@ public class TeleOp extends LinearOpMode {
         tilterUp = hardwareMap.get(DcMotor.class, "tilterUp");
         tilterDown = hardwareMap.get(DcMotor.class,"tilterDown" );
         intake = hardwareMap.get(CRServo.class, "intake");
+        tilterDown.setDirection(DcMotorSimple.Direction.REVERSE);
+        tilterUp.setDirection(DcMotorSimple.Direction.FORWARD);
 
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -233,10 +236,11 @@ public class TeleOp extends LinearOpMode {
             if (gamepad1.dpad_up)
             {
                 tilterUp.setPower(1);
+                tilterDown.setPower(1);
                 tilterStopwatch.reset();
                 isTiltingUp = true;
             }
-            else if (tilterStopwatch.seconds() >= 15 && isTiltingUp)
+            else if (tilterStopwatch.seconds() >= 5 && isTiltingUp)
             {
                 tilterUp.setPower(0);
                 isTiltingUp = false;
@@ -244,11 +248,12 @@ public class TeleOp extends LinearOpMode {
             //tilterdown
             if (gamepad1.dpad_down)
             {
-                tilterDown.setPower(-1);
+                tilterUp.setPower(1);
+                tilterDown.setPower(1);
                 tilterStopwatch.reset();
                 isTiltingDown = true;
             }
-            else if (tilterStopwatch.seconds() >= 15 && isTiltingDown)
+            else if (tilterStopwatch.seconds() >= 5 && isTiltingDown)
             {
                 tilterDown .setPower(0);
                 isTiltingDown = false;
