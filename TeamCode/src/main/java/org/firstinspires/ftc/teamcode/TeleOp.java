@@ -83,14 +83,14 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
     public CRServo intake = null;
-    public DcMotor tilterUp = null;
-    public DcMotor tilterDown = null;
+    public DcMotor elbowUp = null;
+    public DcMotor elbowDown = null;
     public ElapsedTime intakeStopwatch = null;
-    public ElapsedTime tilterStopwatch = null;
+    public ElapsedTime elbowStopwatch = null;
 //    public Servo extender = null;
     public boolean isOutaking = false;
-    public boolean isTiltingUp = false;
-    public boolean isTiltingDown = false;
+    public boolean elbowFunctionUp = false;
+    public boolean elbowFunctionDown = false;
     public IMU imu = null;
     @Override
     public void runOpMode() {
@@ -103,16 +103,16 @@ public class TeleOp extends LinearOpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
         intakeStopwatch = new ElapsedTime();
-        tilterStopwatch = new ElapsedTime();
+        elbowStopwatch = new ElapsedTime();
 //        intake = hardwareMap.get(CRServo.class, "intake");
         //extender.setPosition(0);
 
 
-        tilterUp = hardwareMap.get(DcMotor.class, "tilterUp");
-        tilterDown = hardwareMap.get(DcMotor.class,"tilterDown" );
+        elbowUp = hardwareMap.get(DcMotor.class, "tilterUp");
+        elbowDown = hardwareMap.get(DcMotor.class,"tilterDown" );
         intake = hardwareMap.get(CRServo.class, "intake");
-        tilterDown.setDirection(DcMotorSimple.Direction.REVERSE);
-        tilterUp.setDirection(DcMotorSimple.Direction.FORWARD);
+        elbowDown.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbowUp.setDirection(DcMotorSimple.Direction.FORWARD);
 
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -227,7 +227,7 @@ public class TeleOp extends LinearOpMode {
                 intakeStopwatch.reset();
                 isOutaking = true;
             }
-            else if (intakeStopwatch.seconds() >= 5 && isOutaking)
+            else if (intakeStopwatch.seconds() >= 15 && isOutaking)
             {
                 intake.setPower(0);
                 isOutaking = false;
@@ -235,28 +235,30 @@ public class TeleOp extends LinearOpMode {
             //tilterup
             if (gamepad1.dpad_up)
             {
-                tilterUp.setPower(1);
-                tilterDown.setPower(1);
-                tilterStopwatch.reset();
-                isTiltingUp = true;
+                elbowUp.setPower(1);
+                elbowDown.setPower(1);
+                elbowStopwatch.reset();
+                elbowFunctionUp = true;
             }
-            else if (tilterStopwatch.seconds() >= 5 && isTiltingUp)
+            else if (elbowStopwatch.seconds() >= 15 && elbowFunctionUp)
             {
-                tilterUp.setPower(0);
-                isTiltingUp = false;
+                elbowUp.setPower(0);
+                elbowDown.setPower(0);
+                elbowFunctionUp = false;
             }
             //tilterdown
             if (gamepad1.dpad_down)
             {
-                tilterUp.setPower(1);
-                tilterDown.setPower(1);
-                tilterStopwatch.reset();
-                isTiltingDown = true;
+                elbowUp.setPower(-1);
+                elbowDown.setPower(-1);
+                elbowStopwatch.reset();
+                elbowFunctionDown = true;
             }
-            else if (tilterStopwatch.seconds() >= 5 && isTiltingDown)
+            else if (elbowStopwatch.seconds() >= 15 && elbowFunctionDown)
             {
-                tilterDown .setPower(0);
-                isTiltingDown = false;
+                elbowUp.setPower(0);
+                elbowDown.setPower(0);
+                elbowFunctionDown = false;
             }
 
             //get rotation
@@ -271,6 +273,9 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Is outake Active:", isOutaking);
             telemetry.addData("intake:", intake.getPower());
             telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
+            telemetry.addData("elbowUp Power", elbowUp.getPower());
+            telemetry.addData("elbowDown Power", elbowDown.getPower());
+            telemetry.addData("elbowStopwatch", elbowStopwatch.seconds());
 
             //telemetry.addData("intake", intake.getPower());
             telemetry.update();
