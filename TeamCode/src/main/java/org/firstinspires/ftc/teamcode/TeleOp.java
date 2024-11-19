@@ -232,7 +232,7 @@ public class TeleOp extends LinearOpMode {
                 intake.setPower(0);
                 isOutaking = false;
             }
-            //tilterup
+            //elbowup
             if (gamepad1.dpad_up)
             {
                 elbowUp.setPower(1);
@@ -240,13 +240,14 @@ public class TeleOp extends LinearOpMode {
                 elbowStopwatch.reset();
                 elbowFunctionUp = true;
             }
-            else if (elbowStopwatch.seconds() >= 15 && elbowFunctionUp)
+            else if (elbowStopwatch.seconds() >= 5 && elbowFunctionUp)
             {
                 elbowUp.setPower(0);
                 elbowDown.setPower(0);
                 elbowFunctionUp = false;
+                elbowStopwatch.reset();
             }
-            //tilterdown
+            //elbowdown
             if (gamepad1.dpad_down)
             {
                 elbowUp.setPower(-1);
@@ -254,11 +255,12 @@ public class TeleOp extends LinearOpMode {
                 elbowStopwatch.reset();
                 elbowFunctionDown = true;
             }
-            else if (elbowStopwatch.seconds() >= 15 && elbowFunctionDown)
+            else if (elbowStopwatch.seconds() >= 5 && elbowFunctionDown)
             {
                 elbowUp.setPower(0);
                 elbowDown.setPower(0);
                 elbowFunctionDown = false;
+                elbowStopwatch.reset();
             }
 
             //get rotation
