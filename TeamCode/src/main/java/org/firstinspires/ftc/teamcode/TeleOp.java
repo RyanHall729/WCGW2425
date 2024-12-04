@@ -83,8 +83,7 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
     public CRServo intake = null;
-    public DcMotor elbowLeft = null;
-    public DcMotor elbowRight = null;
+    public DcMotor elbow = null;
     public ElapsedTime intakeStopwatch = null;
     public ElapsedTime elbowStopwatch = null;
 //    public Servo extender = null;
@@ -108,11 +107,9 @@ public class TeleOp extends LinearOpMode {
         //extender.setPosition(0);
 
 
-        elbowLeft = hardwareMap.get(DcMotor.class, "tilterUp");
-        elbowRight = hardwareMap.get(DcMotor.class,"tilterDown" );
+        elbow = hardwareMap.get(DcMotor.class, "tilterUp");
         intake = hardwareMap.get(CRServo.class, "intake");
-        elbowRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        elbowLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        elbow.setDirection(DcMotorSimple.Direction.FORWARD);
 
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -235,40 +232,34 @@ public class TeleOp extends LinearOpMode {
             //elbowup
             if (gamepad1.dpad_up)
             {
-                elbowLeft.setPower(.45);
-                elbowRight.setPower(.45);
+                elbow.setPower(.45);
                 elbowStopwatch.reset();
                 elbowFunctionUp = true;
             }
             else if (elbowStopwatch.seconds() >= 2.5 && elbowFunctionUp)
             {
-                elbowLeft.setPower(.175);
-                elbowRight.setPower(.175);
+                elbow.setPower(.175);
             }
             else if (elbowStopwatch.seconds() >= 5 && elbowFunctionUp)
             {
-                elbowLeft.setPower(0);
-                elbowRight.setPower(0);
+                elbow.setPower(0);
                 elbowFunctionUp = false;
                 elbowStopwatch.reset();
             }
             //elbowdown
             if (gamepad1.dpad_down)
             {
-                elbowLeft.setPower(-.45);
-                elbowRight.setPower(-.45);
+                elbow.setPower(-.45);
                 elbowStopwatch.reset();
                 elbowFunctionDown = true;
             }
             else if (elbowStopwatch.seconds() >= 2.5 && elbowFunctionDown)
             {
-                elbowLeft.setPower(-.175);
-                elbowRight.setPower(-.175);
+                elbow.setPower(-.175);
             }
             else if (elbowStopwatch.seconds() >= 5 && elbowFunctionDown)
             {
-                elbowLeft.setPower(0);
-                elbowRight.setPower(0);
+                elbow.setPower(0);
                 elbowFunctionDown = false;
                 elbowStopwatch.reset();
             }
@@ -285,11 +276,9 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Is outake Active:", isOutaking);
             telemetry.addData("intake:", intake.getPower());
             telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
-            telemetry.addData("elbowUp Power", elbowLeft.getPower());
-            telemetry.addData("elbowDown Power", elbowRight.getPower());
-            telemetry.addData("elbowStopwatch", elbowStopwatch.seconds());
-            telemetry.addData("Right Elbow Encoder", elbowRight.getCurrentPosition());
-            telemetry.addData("left Elbow Encoder", elbowLeft.getCurrentPosition());
+            telemetry.addData("Elbow Left Power", elbow.getPower());
+            telemetry.addData("Elbow Stopwatch", elbowStopwatch.seconds());
+            telemetry.addData("Left Elbow Position", elbow.getCurrentPosition());
 
             //telemetry.addData("intake", intake.getPower());
             telemetry.update();
