@@ -86,11 +86,12 @@ public class TeleOp extends LinearOpMode {
     public DcMotor mater = null;
     public ElapsedTime intakeStopwatch = null;
     public ElapsedTime materStopwatch = null;
-//    public Servo extender = null;
+    //    public Servo extender = null;
     public boolean isOutaking = false;
     public boolean materFunctionUp = false;
     public boolean materFunctionDown = false;
     public IMU imu = null;
+
     @Override
     public void runOpMode() {
 
@@ -213,10 +214,13 @@ public class TeleOp extends LinearOpMode {
 
             double materPower = 0;
             //intake
-            if (gamepad1.x) {
+            if (gamepad1.x)
+            {
                 intake.setPower(-1);
                 intakeStopwatch.reset();
-            } else if (intakeStopwatch.seconds() >= 2.05) {
+            }
+            else if (intakeStopwatch.seconds() >= 2.05)
+            {
                 intake.setPower(0);
             }
 
@@ -225,13 +229,16 @@ public class TeleOp extends LinearOpMode {
                 intake.setPower(1);
                 intakeStopwatch.reset();
                 isOutaking = true;
-            } else if (intakeStopwatch.seconds() >= 15 && isOutaking) {
+            }
+            else if (intakeStopwatch.seconds() >= 15 && isOutaking)
+            {
                 intake.setPower(0);
                 isOutaking = false;
             }
             //elbowup
-            if (gamepad1.dpad_up) {
-                materPower = .45;
+            if (gamepad1.dpad_up)
+            {
+                mater.setPower(.45);
                 materStopwatch.reset();
                 materFunctionUp = true;
             }
@@ -239,16 +246,15 @@ public class TeleOp extends LinearOpMode {
             //{
             //    materPower = .175;
             //}
-            //else if (mater.getCurrentPosition() >= -100 && materFunctionUp)
-            //{
-            //    materPower = 0;
-            //    materFunctionUp = false;
-            //    materStopwatch.reset();
-            // }
+            else if (mater.getCurrentPosition() >= -100 && materFunctionUp) {
+                mater.setPower(0);
+                materFunctionUp = false;
+                materStopwatch.reset();
+            }
             mater.setPower(materPower);
             //elbowdown
             if (gamepad1.dpad_down) {
-                materPower = -.45;
+                mater.setPower(.45);
                 materStopwatch.reset();
                 materFunctionDown = true;
             }
@@ -257,31 +263,31 @@ public class TeleOp extends LinearOpMode {
             // {
             //     materPower = -.175;
             // }
-            // else if (mater.getCurrentPosition() <= -1530 && materFunctionDown)
-            // {
-            //     materPower = 0;
-            //     materFunctionDown = false;
-            //     materStopwatch.reset();
-        }
+            else if (mater.getCurrentPosition() <= -1530 && materFunctionDown) {
+                mater.setPower(0);
+                materFunctionDown = false;
+                materStopwatch.reset();
+            }
 
-        //get rotation
-        //turn the robot
-        // apply power to specific wheels
+            //get rotation
+            //turn the robot
+            // apply power to specific wheels
 
 
-        // Show the elapsed game time and wheel power.
+            // Show the elapsed game time and wheel power.
 //            telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
-        telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-        telemetry.addData("Is outake Active:", isOutaking);
-        telemetry.addData("intake:", intake.getPower());
-        telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
-        telemetry.addData("Mater Power", mater.getPower());
-        telemetry.addData("Mater Stopwatch", materStopwatch.seconds());
-        telemetry.addData("Mater Position", mater.getCurrentPosition());
+            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
+            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
+            telemetry.addData("Is outake Active:", isOutaking);
+            telemetry.addData("intake:", intake.getPower());
+            telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
+            telemetry.addData("Mater Power", mater.getPower());
+            telemetry.addData("Mater Stopwatch", materStopwatch.seconds());
+            telemetry.addData("Mater Position", mater.getCurrentPosition());
 
-        //telemetry.addData("intake", intake.getPower());
-        telemetry.update();
-    }
+            //telemetry.addData("intake", intake.getPower());
+            telemetry.update();
+        }
     }
 }
+
