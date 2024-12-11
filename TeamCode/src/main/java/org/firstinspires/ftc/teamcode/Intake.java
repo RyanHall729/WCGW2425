@@ -6,11 +6,11 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class Intake {
-    public DcMotor tilter = null;
+    public DcMotor elbow = null;
     public Servo wrist = null;
     public CRServo intake = null;
     public ElapsedTime intakeStopwatch = null;
-    public ElapsedTime tilterStopwatch = null;
+    public ElapsedTime elbowStopwatch = null;
     public boolean isOutaking = false;
     public boolean isTiltingUp = false;
     public boolean isTiltingDown = false;

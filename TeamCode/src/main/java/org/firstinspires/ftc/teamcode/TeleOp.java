@@ -72,7 +72,7 @@ public class TeleOp extends LinearOpMode {
     // Declare OpMode members for each of the 4 motors.
 //    private ElapsedTime runtime = new ElapsedTime();
 //    private ElapsedTime intakeStopwatch = new ElapsedTime();
-//    private ElapsedTime tilterStopwatch = new ElapsedTime();
+//    private ElapsedTime elbowStopwatch = new ElapsedTime();
 //    public DcMotor leftFront = null;
 //    public DcMotor leftBack = null;
 //    public DcMotor rightFront = null;
@@ -83,14 +83,17 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
     public CRServo intake = null;
-    public DcMotor mater = null;
+    public DcMotor elbow = null;
     public ElapsedTime intakeStopwatch = null;
-    public ElapsedTime materStopwatch = null;
+    public ElapsedTime elbowStopwatch = null;
     //    public Servo extender = null;
     public boolean isOutaking = false;
-    public boolean materFunctionUp = false;
-    public boolean materFunctionDown = false;
+    public boolean elbowFunctionUp = false;
+    public boolean elbowFunctionDown = false;
     public IMU imu = null;
+    public int armPosition = 0;
+    public Pcontroller pcontrollerArm = new Pcontroller(.005);
+    public int elbowMaxTicks = 1700;
 
     @Override
     public void runOpMode() {
@@ -103,15 +106,15 @@ public class TeleOp extends LinearOpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
         intakeStopwatch = new ElapsedTime();
-        materStopwatch = new ElapsedTime();
+        elbowStopwatch = new ElapsedTime();
 //        intake = hardwareMap.get(CRServo.class, "intake");
         //extender.setPosition(0);
 
 
-        mater = hardwareMap.get(DcMotor.class, "mater");
+        elbow = hardwareMap.get(DcMotor.class, "mater");
         intake = hardwareMap.get(CRServo.class, "intake");
-        mater.setDirection(DcMotorSimple.Direction.FORWARD);
-        mater.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elbow.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -130,16 +133,19 @@ public class TeleOp extends LinearOpMode {
         // when you first test your robot, push the left joystick forward and observe the direction the wheels turn.
         // Reverse the direction (flip FORWARD <-> REVERSE ) of any wheel that runs backward
         // Keep testing until ALL the wheels move the robot forward when you push the left joystick forward.
-        leftFront.setDirection(DcMotor.Direction.FORWARD);
-        leftBack.setDirection(DcMotor.Direction.FORWARD);
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setDirection(DcMotor.Direction.REVERSE);
+        rightFront.setDirection(DcMotor.Direction.FORWARD);
+        rightBack.setDirection(DcMotor.Direction.FORWARD);
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
 
         //intake = hardwareMap.get(CRServo.class, "intake");
-
+        pcontrollerArm.setInputRange(0,elbowMaxTicks);
+        pcontrollerArm.setSetPoint(0);
+        pcontrollerArm.setOutputRange(.01,.99);
+        pcontrollerArm.setThresholdValue(0);
         telemetry.update();
         waitForStart();
 //        runtime.reset();
@@ -214,13 +220,10 @@ public class TeleOp extends LinearOpMode {
 
             double materPower = 0;
             //intake
-            if (gamepad1.x)
-            {
+            if (gamepad1.x) {
                 intake.setPower(-1);
                 intakeStopwatch.reset();
-            }
-            else if (intakeStopwatch.seconds() >= 2.05)
-            {
+            } else if (intakeStopwatch.seconds() >= 2.05) {
                 intake.setPower(0);
             }
 
@@ -229,46 +232,27 @@ public class TeleOp extends LinearOpMode {
                 intake.setPower(1);
                 intakeStopwatch.reset();
                 isOutaking = true;
-            }
-            else if (intakeStopwatch.seconds() >= 15 && isOutaking)
-            {
+            } else if (intakeStopwatch.seconds() >= 15 && isOutaking) {
                 intake.setPower(0);
                 isOutaking = false;
             }
             //elbowup
             if (gamepad1.dpad_up)
             {
-                mater.setPower(.45);
-                materStopwatch.reset();
-                materFunctionUp = true;
-            }
-            //else if (mater.getCurrentPosition() >= -930 && materFunctionUp)
-            //{
-            //    materPower = .175;
-            //}
-            else if (mater.getCurrentPosition() >= -100 && materFunctionUp) {
-                mater.setPower(0);
-                materFunctionUp = false;
-                materStopwatch.reset();
-            }
-            mater.setPower(materPower);
-            //elbowdown
-            if (gamepad1.dpad_down) {
-                mater.setPower(.45);
-                materStopwatch.reset();
-                materFunctionDown = true;
-            }
-            // }
-            // else if (mater.getCurrentPosition() <= -930 && materFunctionDown)
-            // {
-            //     materPower = -.175;
-            // }
-            else if (mater.getCurrentPosition() <= -1530 && materFunctionDown) {
-                mater.setPower(0);
-                materFunctionDown = false;
-                materStopwatch.reset();
+                elbow.setPower(.45);
+                pcontrollerArm.setSetPoint(elbow.getCurrentPosition());
             }
 
+            //elbowdown
+           else if (gamepad1.dpad_down)
+            {
+                elbow.setPower(-.45);
+                pcontrollerArm.setSetPoint(elbow.getCurrentPosition());
+            }
+           else
+            {
+                updateArmPosition();
+            }
             //get rotation
             //turn the robot
             // apply power to specific wheels
@@ -281,12 +265,24 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Is outake Active:", isOutaking);
             telemetry.addData("intake:", intake.getPower());
             telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
-            telemetry.addData("Mater Power", mater.getPower());
-            telemetry.addData("Mater Stopwatch", materStopwatch.seconds());
-            telemetry.addData("Mater Position", mater.getCurrentPosition());
+            telemetry.addData("Mater Power", elbow.getPower());
+            telemetry.addData("Mater Position", elbow.getCurrentPosition());
 
             //telemetry.addData("intake", intake.getPower());
             telemetry.update();
+        }
+    }
+
+    public void updateArmPosition()
+    {
+        armPosition = elbow.getCurrentPosition();
+        if (armPosition < pcontrollerArm.setPoint)
+        {
+            elbow.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
+        }
+        else
+        {
+            elbow.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
         }
     }
 }
