@@ -32,11 +32,11 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 /*
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -52,14 +52,19 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Iterative OpMode", group="Iterative OpMode")
-@Disabled
+@TeleOp(name="test", group="Iterative OpMode")
+
 public class TestTeleOp extends OpMode
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor motor = null;
-    private Servo servo = null;
+    private DcMotor arm = null;
+    private Servo extender = null;
+    private CRServo intake = null;
+    private Pcontroller armPController = new Pcontroller(0.005);
+
+    public double servoUp = 0.5;
+    public int setPoint = 0;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -71,13 +76,21 @@ public class TestTeleOp extends OpMode
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        motor  = hardwareMap.get(DcMotor.class, "motor");
-        servo = hardwareMap.get(Servo.class, "servo");
+        //motor  = hardwareMap.get(DcMotor.class, "motor");
+        extender = hardwareMap.get(Servo.class, "extender");
+        intake = hardwareMap.get(CRServo.class, "intake");
+        arm = hardwareMap.get(DcMotor.class, "mater");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
-        motor.setDirection(DcMotor.Direction.REVERSE);
+        arm.setDirection(DcMotor.Direction.REVERSE);
+        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        armPController.setInputRange(0, 200);
+        armPController.setSetPoint(0);
+        armPController.setOutputRange(.01,.50);
+        armPController.setThresholdValue(0);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -104,24 +117,34 @@ public class TestTeleOp extends OpMode
     @Override
     public void loop() {
         // Setup a variable for each drive wheel to save power level for telemetry
-        double motorPower = 0;
-        motorPower = gamepad1.right_stick_y;
-        motor.setPower(motorPower);
 
-        double servoUp = 1;
-        double servoDown = 0;
+        if(gamepad1.a)
+        {
+            setPoint += 50;
+        }
+        else if(gamepad1.b)
+        {
+            setPoint -= 50;
+        }
+        //armPController.setSetPoint(setPoint);
+
+
 
         if(gamepad1.dpad_up)
         {
-            servo.setPosition(servoUp);
+            servoUp += .1;
         }
         else if(gamepad1.dpad_down)
         {
-            servo.setPosition(servoDown);
+
+           servoUp -= .1;
         }
+        extender.setPosition(servoUp);
 
         // Show the elapsed game time and wheel power.
-        telemetry.addData("servo", servo.getPosition());
+        telemetry.addData("ext", extender.getPosition());
+        telemetry.addData("arm", arm.getCurrentPosition());
+        telemetry.addData("apc", armPController.setPoint);
         telemetry.addData("Status", "Run Time: " + runtime.toString());
     }
 

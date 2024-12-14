@@ -36,6 +36,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /*
  * This file contains an example of a Linear "OpMode".
@@ -83,6 +84,7 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
     public CRServo intake = null;
+    public Servo extender = null;
     public DcMotor elbow = null;
     public ElapsedTime intakeStopwatch = null;
     public ElapsedTime elbowStopwatch = null;
@@ -94,6 +96,17 @@ public class TeleOp extends LinearOpMode {
     public int armPosition = 0;
     public Pcontroller pcontrollerArm = new Pcontroller(.005);
     public int elbowMaxTicks = 1700;
+    public int state = 0;
+
+    enum GrabAndDrop
+    {
+        GRAB_SAMPLE,
+        DRIVE,
+        DROP,
+        HOME,
+    }
+
+    GrabAndDrop grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
 
     @Override
     public void runOpMode() {
@@ -112,7 +125,8 @@ public class TeleOp extends LinearOpMode {
 
 
         elbow = hardwareMap.get(DcMotor.class, "mater");
-        intake = hardwareMap.get(CRServo.class, "intake");
+        intake = hardwareMap.get(CRServo.class, "intake"); //port 0
+        extender = hardwareMap.get(Servo.class, "extender"); //port 1
         elbow.setDirection(DcMotorSimple.Direction.REVERSE);
         elbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -142,11 +156,14 @@ public class TeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
 
         //intake = hardwareMap.get(CRServo.class, "intake");
-        pcontrollerArm.setInputRange(0,elbowMaxTicks);
-        pcontrollerArm.setSetPoint(0);
+        pcontrollerArm.setInputRange(0, elbowMaxTicks);
+        pcontrollerArm.setSetPoint(1450);
         pcontrollerArm.setOutputRange(.01,.99);
         pcontrollerArm.setThresholdValue(0);
         telemetry.update();
+
+
+
         waitForStart();
 //        runtime.reset();
 
@@ -253,6 +270,68 @@ public class TeleOp extends LinearOpMode {
             {
                 updateArmPosition();
             }
+
+           //Untested state machine
+           switch (grabAndDrop) {
+               case GRAB_SAMPLE:
+               {
+                   if(gamepad1.a && state == 0)
+                   {
+                       pcontrollerArm.setSetPoint(Constants.LIFT_PICKUP);
+                       intake.setPower(1);
+                       extender.setPosition(Constants.EXTENDER_OUT);
+                       intakeStopwatch.reset();
+                       state++;
+                       grabAndDrop = GrabAndDrop.DRIVE;
+                   }
+                   break;
+               }
+               case DRIVE:
+               {
+                   //if the intake has been running for a bit then turn it off so we can drive
+                   if(state == 1 && gamepad1.right_bumper)
+                   {
+                       intake.setPower(0);
+                       extender.setPosition(Constants.EXTENDER_SAFE);
+                       pcontrollerArm.setSetPoint(500);
+                       state++;
+                       intakeStopwatch.reset();
+                       grabAndDrop = GrabAndDrop.DROP;
+                   }
+                   break;
+               }
+               case DROP:
+               {
+                   if(gamepad1.right_bumper && state == 2 && intakeStopwatch.seconds() > 1)
+                   {
+                       pcontrollerArm.setSetPoint(Constants.LIFT_UP);
+                       extender.setPosition(Constants.EXTENDER_OUT);
+                       intake.setPower(-1);
+                       intakeStopwatch.reset();
+                       state++;
+                       grabAndDrop = GrabAndDrop.HOME;
+                   }
+                   break;
+               }               case HOME:
+               {
+                   if (gamepad1.right_trigger > 0.2 && state == 3)
+                   {
+                       pcontrollerArm.setSetPoint(Constants.LIFT_HOME);
+                       extender.setPosition(Constants.EXTENDER_SAFE);
+                       intake.setPower(0);
+                       intakeStopwatch.reset();
+                       state = 0;
+                       grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
+                   }
+                   break;
+               }
+
+           }
+
+           if(gamepad1.right_trigger > 0.2)
+           {
+               grabAndDrop = GrabAndDrop.HOME;
+           }
             //get rotation
             //turn the robot
             // apply power to specific wheels
@@ -267,6 +346,9 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
             telemetry.addData("Mater Power", elbow.getPower());
             telemetry.addData("Mater Position", elbow.getCurrentPosition());
+            telemetry.addData("pcontroller set pt ", pcontrollerArm.setPoint);
+            telemetry.addData("state", state);
+
 
             //telemetry.addData("intake", intake.getPower());
             telemetry.update();
