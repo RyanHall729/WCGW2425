@@ -85,10 +85,9 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightBack = null;
     public CRServo intake = null;
     public Servo extender = null;
-    public DcMotor elbow = null;
+    public DcMotor elbowTop = null;
+    public DcMotor elbowBottom = null;
     public ElapsedTime intakeStopwatch = null;
-    public ElapsedTime elbowStopwatch = null;
-    //    public Servo extender = null;
     public boolean isOutaking = false;
     public boolean elbowFunctionUp = false;
     public boolean elbowFunctionDown = false;
@@ -119,16 +118,18 @@ public class TeleOp extends LinearOpMode {
         rightBack = hardwareMap.get(DcMotor.class, "rightBack");
 
         intakeStopwatch = new ElapsedTime();
-        elbowStopwatch = new ElapsedTime();
 //        intake = hardwareMap.get(CRServo.class, "intake");
         //extender.setPosition(0);
 
 
-        elbow = hardwareMap.get(DcMotor.class, "mater");
+        elbowTop = hardwareMap.get(DcMotor.class, "elbowTop");
+        elbowBottom = hardwareMap.get(DcMotor.class, "elbowBottom");
         intake = hardwareMap.get(CRServo.class, "intake"); //port 0
         extender = hardwareMap.get(Servo.class, "extender"); //port 1
-        elbow.setDirection(DcMotorSimple.Direction.REVERSE);
-        elbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elbowTop.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbowBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elbowBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -226,16 +227,17 @@ public class TeleOp extends LinearOpMode {
             rightBack.setPower(rightBackPower);
 
             //extender
-//            if (gamepad1.a)
-//            {
-//                extender.setPosition(1);
-//            }
-//            else if (gamepad1.y)
-//            {
-//                extender.setPosition(0);
+            if (gamepad1.left_bumper)
+            {
+                extender.setPosition(1);
+            }
+            else if (gamepad1.y)
+            {
+                extender.setPosition(0);
+            }
 //
 
-            double materPower = 0;
+
             //intake
             if (gamepad1.x) {
                 intake.setPower(-1);
@@ -256,15 +258,17 @@ public class TeleOp extends LinearOpMode {
             //elbowup
             if (gamepad1.dpad_up)
             {
-                elbow.setPower(.45);
-                pcontrollerArm.setSetPoint(elbow.getCurrentPosition());
+                elbowTop.setPower(.45);
+                elbowBottom.setPower(.45);
+                pcontrollerArm.setSetPoint(elbowTop.getCurrentPosition());
             }
 
             //elbowdown
            else if (gamepad1.dpad_down)
             {
-                elbow.setPower(-.45);
-                pcontrollerArm.setSetPoint(elbow.getCurrentPosition());
+                elbowTop.setPower(-.45);
+                elbowBottom.setPower(-.45);
+                pcontrollerArm.setSetPoint(elbowTop.getCurrentPosition());
             }
            else
             {
@@ -344,8 +348,10 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Is outake Active:", isOutaking);
             telemetry.addData("intake:", intake.getPower());
             telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
-            telemetry.addData("Mater Power", elbow.getPower());
-            telemetry.addData("Mater Position", elbow.getCurrentPosition());
+            telemetry.addData("elbowTop Power", elbowTop.getPower());
+            telemetry.addData("elbowBottom Power", elbowBottom.getPower());
+            telemetry.addData("elbowTop Position", elbowTop.getCurrentPosition());
+            telemetry.addData("elbowBottom Position", elbowBottom.getCurrentPosition());
             telemetry.addData("pcontroller set pt ", pcontrollerArm.setPoint);
             telemetry.addData("state", state);
 
@@ -355,16 +361,18 @@ public class TeleOp extends LinearOpMode {
         }
     }
 
-    public void updateArmPosition()
+    public void updateArmPosition ()
     {
-        armPosition = elbow.getCurrentPosition();
+        armPosition = elbowTop.getCurrentPosition();
         if (armPosition < pcontrollerArm.setPoint)
         {
-            elbow.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
+            elbowTop.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
+            elbowBottom.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
         }
         else
         {
-            elbow.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
+            elbowTop.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
+            elbowBottom.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
         }
     }
 }
