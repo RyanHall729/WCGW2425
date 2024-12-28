@@ -4,7 +4,7 @@ public class Constants {
 
     //lift
     public static final int LIFT_HOME = 1450;
-    public static final int LIFT_PICKUP = 200;
+    public static final int LIFT_PICKUP = 1000;
     public static final int LIFT_UP = 1000;
     public static final int LIFT_MID = 500;
 

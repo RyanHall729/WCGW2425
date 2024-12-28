@@ -83,19 +83,21 @@ public class TeleOp extends LinearOpMode {
     public DcMotor leftBack = null;
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
-    public CRServo intake = null;
+    public CRServo intake2 = null;
     public Servo extender = null;
     public DcMotor elbowTop = null;
     public DcMotor elbowBottom = null;
     public ElapsedTime intakeStopwatch = null;
     public boolean isOutaking = false;
+    public boolean isIntaking = false;
     public boolean elbowFunctionUp = false;
     public boolean elbowFunctionDown = false;
     public IMU imu = null;
     public int armPosition = 0;
-    public Pcontroller pcontrollerArm = new Pcontroller(.005);
-    public int elbowMaxTicks = 1700;
+    public Pcontroller pcontrollerArm = new Pcontroller(.01);
+    public int elbowMaxTicks = 1600;
     public int state = 0;
+    public boolean statePreValue = false;
 
     enum GrabAndDrop
     {
@@ -124,15 +126,21 @@ public class TeleOp extends LinearOpMode {
 
         elbowTop = hardwareMap.get(DcMotor.class, "elbowTop");
         elbowBottom = hardwareMap.get(DcMotor.class, "elbowBottom");
-        intake = hardwareMap.get(CRServo.class, "intake"); //port 0
-        extender = hardwareMap.get(Servo.class, "extender"); //port 1
-        elbowTop.setDirection(DcMotorSimple.Direction.REVERSE);
-        elbowBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake2 = hardwareMap.get(CRServo.class, "intake2"); // expansion hub port 0
+        intake2.setPower(.5);
+        extender = hardwareMap.get(Servo.class, "extender");//port 1
+        extender.setPosition(.5);
         elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elbowBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elbowTop.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        elbowBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        elbowTop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elbowBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        elbowTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        elbowBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.LEFT, RevHubOrientationOnRobot.UsbFacingDirection.UP);
+        RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.FORWARD, RevHubOrientationOnRobot.UsbFacingDirection.UP);
         IMU.Parameters parameters = new IMU.Parameters(hubOrientationOnRobot);
         imu.initialize(parameters);
 
@@ -152,15 +160,17 @@ public class TeleOp extends LinearOpMode {
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.FORWARD);
+        elbowTop.setDirection(DcMotorSimple.Direction.FORWARD);
+        elbowBottom.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
 
         //intake = hardwareMap.get(CRServo.class, "intake");
         pcontrollerArm.setInputRange(0, elbowMaxTicks);
-        pcontrollerArm.setSetPoint(1450);
-        pcontrollerArm.setOutputRange(.01,.99);
-        pcontrollerArm.setThresholdValue(0);
+       // pcontrollerArm.setSetPoint(1450);
+        pcontrollerArm.setOutputRange(.01,0.60);
+        pcontrollerArm.setThresholdValue(2);
         telemetry.update();
 
 
@@ -173,6 +183,8 @@ public class TeleOp extends LinearOpMode {
         double leftFrontPower = 0;
         double rightBackPower = 0;
         double rightFrontPower = 0;
+
+
         while (opModeIsActive()) {
 
 
@@ -229,108 +241,154 @@ public class TeleOp extends LinearOpMode {
             //extender
             if (gamepad1.left_bumper)
             {
-                extender.setPosition(1);
+                extender.setPosition(.5);
             }
-            else if (gamepad1.y)
+            else if (gamepad1.right_bumper)
             {
                 extender.setPosition(0);
             }
-//
 
 
             //intake
-            if (gamepad1.x) {
-                intake.setPower(-1);
+            if (gamepad1.x)
+            {
+                intake2.setPower(-1);
+                isIntaking = true;
                 intakeStopwatch.reset();
-            } else if (intakeStopwatch.seconds() >= 2.05) {
-                intake.setPower(0);
+            }
+            else if (isIntaking)
+            {
+                intake2.setPower(0);
             }
 
             //outake
-            if (gamepad1.b) {
-                intake.setPower(1);
-                intakeStopwatch.reset();
+            if (gamepad1.b)
+            {
+                intake2.setPower(1);
+                //intakeStopwatch.reset();
                 isOutaking = true;
-            } else if (intakeStopwatch.seconds() >= 15 && isOutaking) {
-                intake.setPower(0);
+            } else if (isOutaking)
+            {
+                intake2.setPower(0);
                 isOutaking = false;
             }
+
             //elbowup
-            if (gamepad1.dpad_up)
+
+            if (gamepad1.dpad_up && elbowBottom.getCurrentPosition()<1600)
             {
-                elbowTop.setPower(.45);
-                elbowBottom.setPower(.45);
+                elbowTop.setPower(.60);
+                elbowBottom.setPower(.60);
                 pcontrollerArm.setSetPoint(elbowTop.getCurrentPosition());
+                pcontrollerArm.setSetPoint(elbowBottom.getCurrentPosition());
             }
 
             //elbowdown
-           else if (gamepad1.dpad_down)
+           else if (gamepad1.dpad_down && elbowTop.getCurrentPosition()>0)
             {
                 elbowTop.setPower(-.45);
                 elbowBottom.setPower(-.45);
                 pcontrollerArm.setSetPoint(elbowTop.getCurrentPosition());
+                pcontrollerArm.setSetPoint(elbowBottom.getCurrentPosition());
             }
            else
             {
                 updateArmPosition();
             }
 
-           //Untested state machine
-           switch (grabAndDrop) {
-               case GRAB_SAMPLE:
-               {
-                   if(gamepad1.a && state == 0)
-                   {
-                       pcontrollerArm.setSetPoint(Constants.LIFT_PICKUP);
-                       intake.setPower(1);
-                       extender.setPosition(Constants.EXTENDER_OUT);
-                       intakeStopwatch.reset();
-                       state++;
-                       grabAndDrop = GrabAndDrop.DRIVE;
-                   }
-                   break;
-               }
-               case DRIVE:
-               {
-                   //if the intake has been running for a bit then turn it off so we can drive
-                   if(state == 1 && gamepad1.right_bumper)
-                   {
-                       intake.setPower(0);
-                       extender.setPosition(Constants.EXTENDER_SAFE);
-                       pcontrollerArm.setSetPoint(500);
-                       state++;
-                       intakeStopwatch.reset();
-                       grabAndDrop = GrabAndDrop.DROP;
-                   }
-                   break;
-               }
-               case DROP:
-               {
-                   if(gamepad1.right_bumper && state == 2 && intakeStopwatch.seconds() > 1)
-                   {
-                       pcontrollerArm.setSetPoint(Constants.LIFT_UP);
-                       extender.setPosition(Constants.EXTENDER_OUT);
-                       intake.setPower(-1);
-                       intakeStopwatch.reset();
-                       state++;
-                       grabAndDrop = GrabAndDrop.HOME;
-                   }
-                   break;
-               }               case HOME:
-               {
-                   if (gamepad1.right_trigger > 0.2 && state == 3)
-                   {
-                       pcontrollerArm.setSetPoint(Constants.LIFT_HOME);
-                       extender.setPosition(Constants.EXTENDER_SAFE);
-                       intake.setPower(0);
-                       intakeStopwatch.reset();
-                       state = 0;
-                       grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
-                   }
-                   break;
-               }
+ // State
+            if(gamepad1.a && state == 0 && !statePreValue)
+            {
+                statePreValue = true;
+                pcontrollerArm.setSetPoint(Constants.LIFT_PICKUP);
+                //intakeStopwatch.reset();
+                state++;
+            }
 
-           }
+            if(state == 1 && gamepad1.a && !statePreValue)
+            {
+                statePreValue = true;
+                extender.setPosition(0.1);
+                state++;
+                //intakeStopwatch.reset();
+
+            }
+
+            if(state == 2 && gamepad1.a && !statePreValue)
+            {
+                statePreValue = true;
+                extender.setPosition(0.5);
+                pcontrollerArm.setSetPoint(50);
+                state=0;
+                //intakeStopwatch.reset();
+
+            }
+
+            statePreValue = gamepad1.a;
+
+
+
+
+
+
+
+
+//           //Untested state machine
+//           switch (grabAndDrop) {
+//               case GRAB_SAMPLE:
+//               {
+//                   if(gamepad1.a && state == 0)
+//                   {
+//                       pcontrollerArm.setSetPoint(Constants.LIFT_PICKUP);
+//                       intake.setPower(1);
+//                       extender.setPosition(Constants.EXTENDER_OUT);
+//                       intakeStopwatch.reset();
+//                       state++;
+//                       grabAndDrop = GrabAndDrop.DRIVE;
+//                   }
+//                   break;
+//               }
+//               case DRIVE:
+//               {
+//                   //if the intake has been running for a bit then turn it off so we can drive
+//                   if(state == 1 && gamepad1.right_bumper)
+//                   {
+//                       intake.setPower(0);
+//                       extender.setPosition(Constants.EXTENDER_SAFE);
+//                       pcontrollerArm.setSetPoint(500);
+//                       state++;
+//                       intakeStopwatch.reset();
+//                       grabAndDrop = GrabAndDrop.DROP;
+//                   }
+//                   break;
+//               }
+//               case DROP:
+//               {
+//                   if(gamepad1.right_bumper && state == 2 && intakeStopwatch.seconds() > 1)
+//                   {
+//                       pcontrollerArm.setSetPoint(Constants.LIFT_UP);
+//                       extender.setPosition(Constants.EXTENDER_OUT);
+//                       intake.setPower(-1);
+//                       intakeStopwatch.reset();
+//                       state++;
+//                       grabAndDrop = GrabAndDrop.HOME;
+//                   }
+//                   break;
+//               }               case HOME:
+//               {
+//                   if (gamepad1.right_trigger > 0.2 && state == 3)
+//                   {
+//                       pcontrollerArm.setSetPoint(Constants.LIFT_HOME);
+//                       extender.setPosition(Constants.EXTENDER_SAFE);
+//                       intake.setPower(0);
+//                       intakeStopwatch.reset();
+//                       state = 0;
+//                       grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
+//                   }
+//                   break;
+//               }
+//
+//           }
 
            if(gamepad1.right_trigger > 0.2)
            {
@@ -346,7 +404,7 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
             telemetry.addData("Is outake Active:", isOutaking);
-            telemetry.addData("intake:", intake.getPower());
+            telemetry.addData("intake:", intake2.getPower());
             telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
             telemetry.addData("elbowTop Power", elbowTop.getPower());
             telemetry.addData("elbowBottom Power", elbowBottom.getPower());
@@ -354,6 +412,7 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("elbowBottom Position", elbowBottom.getCurrentPosition());
             telemetry.addData("pcontroller set pt ", pcontrollerArm.setPoint);
             telemetry.addData("state", state);
+            telemetry.addData("extender", extender.getPosition());
 
 
             //telemetry.addData("intake", intake.getPower());
@@ -367,12 +426,12 @@ public class TeleOp extends LinearOpMode {
         if (armPosition < pcontrollerArm.setPoint)
         {
             elbowTop.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
-            elbowBottom.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
+            //elbowBottom.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
         }
         else
         {
             elbowTop.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
-            elbowBottom.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
+            //elbowBottom.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
         }
     }
 }
