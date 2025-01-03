@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -47,8 +48,8 @@ import com.qualcomm.robotcore.hardware.Servo;
  * This particular OpMode illustrates driving a 4-motor Omni-Directional (or Holonomic) robot.
  * This code will work with either a Mecanum-Drive or an X-Drive train.
  * Both of these drives are illustrated at https://gm0.org/en/latest/docs/robot-design/drivetrains/holonomic.html
- * Note that a Mecanum drive must display an X roller-pattern when viewed from above.
- *
+ *  Note that a Mecanum drive must display an X roller-pattern when viewed from above.
+
  * Also note that it is critical to set the correct rotation direction for each motor.  See details below.
  *
  * Holonomic drives provide the ability for the robot to move in three axes (directions) simultaneously.
@@ -85,8 +86,9 @@ public class TeleOp extends LinearOpMode {
     public DcMotor rightBack = null;
     public CRServo intake2 = null;
     public Servo extender = null;
-    public DcMotor elbowTop = null;
-    public DcMotor elbowBottom = null;
+    public Servo wrist = null;
+    public DcMotorEx elbowTop = null;
+    public DcMotorEx elbowBottom = null;
     public ElapsedTime intakeStopwatch = null;
     public boolean isOutaking = false;
     public boolean isIntaking = false;
@@ -94,55 +96,68 @@ public class TeleOp extends LinearOpMode {
     public boolean elbowFunctionDown = false;
     public IMU imu = null;
     public int armPosition = 0;
-    public Pcontroller pcontrollerArm = new Pcontroller(.01);
-    public int elbowMaxTicks = 1600;
+    public Pcontroller pTopControllerArm = new Pcontroller(.005);
+    public Pcontroller pBottomControllerArm = new Pcontroller(.005);
+    public int elbowTopMaxTicks = 1607;
+    public int elbowBottomMaxTicks = 1559;
     public int state = 0;
     public boolean statePreValue = false;
+    public double sensitivity = 5;
+    public double elbowTopPosition;
+    public double elbowFactor;
+    public double ticsPerRotationTop;
+    public double ticsPerRotationBottom;
+    public double radPerTicTop;
+    public double radPerTicBottom;
+    public double extenderPosition;
 
-    enum GrabAndDrop
-    {
+
+   enum GrabAndDrop {
         GRAB_SAMPLE,
         DRIVE,
         DROP,
         HOME,
     }
 
-    GrabAndDrop grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
+   GrabAndDrop grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
+
 
     @Override
     public void runOpMode() {
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFront = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBack");
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
 
         intakeStopwatch = new ElapsedTime();
 //        intake = hardwareMap.get(CRServo.class, "intake");
-        //extender.setPosition(0);
-
-
-        elbowTop = hardwareMap.get(DcMotor.class, "elbowTop");
-        elbowBottom = hardwareMap.get(DcMotor.class, "elbowBottom");
+        elbowTop = hardwareMap.get(DcMotorEx.class, "elbowTop");
+        elbowBottom = hardwareMap.get(DcMotorEx.class, "elbowBottom");
         intake2 = hardwareMap.get(CRServo.class, "intake2"); // expansion hub port 0
-        intake2.setPower(.5);
+        intake2.setPower(0);
         extender = hardwareMap.get(Servo.class, "extender");//port 1
-        extender.setPosition(.5);
+        //extender.setPosition(0.0); // use position 0 when installing the extender, otherwise use the position 6
+        extender.setPosition(0.8);
+        wrist = hardwareMap.get(Servo.class, "wrist");//expansion hub port 1
+        wrist.setPosition(.475);
         elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elbowBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        elbowTop.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        elbowBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        elbowTop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        elbowBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        elbowTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        elbowBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        elbowTop.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        elbowTop.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        elbowTop.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        elbowBottom.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.FORWARD, RevHubOrientationOnRobot.UsbFacingDirection.UP);
         IMU.Parameters parameters = new IMU.Parameters(hubOrientationOnRobot);
         imu.initialize(parameters);
+
+
 
 //        extender = hardwareMap.get(Servo.class, "extender");
 
@@ -160,17 +175,28 @@ public class TeleOp extends LinearOpMode {
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.FORWARD);
-        elbowTop.setDirection(DcMotorSimple.Direction.FORWARD);
-        elbowBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbowTop.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbowBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+        ticsPerRotationTop= elbowTop.getMotorType().getTicksPerRev();
+        ticsPerRotationBottom = elbowBottom.getMotorType().getTicksPerRev();
+        radPerTicTop = Math.PI/(ticsPerRotationTop);
+        radPerTicBottom = Math.PI/(ticsPerRotationBottom);
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
+        telemetry.addData("radPerTicTop", radPerTicTop);
+        telemetry.addData("radPerTicBottom",radPerTicBottom);
+        telemetry.addData("Wrist Position", wrist.getPosition());
+        telemetry.addData("Extender Position", extender.getPosition());
 
         //intake = hardwareMap.get(CRServo.class, "intake");
-        pcontrollerArm.setInputRange(0, elbowMaxTicks);
-       // pcontrollerArm.setSetPoint(1450);
-        pcontrollerArm.setOutputRange(.01,0.60);
-        pcontrollerArm.setThresholdValue(2);
+        pTopControllerArm.setInputRange(0, elbowTopMaxTicks);;//////////////////////
+        pTopControllerArm.setOutputRange(.01,0.60);
+        pTopControllerArm.setThresholdValue(2);
+
+        pBottomControllerArm.setInputRange(0, elbowBottomMaxTicks);;////////////////
+        pBottomControllerArm.setOutputRange(.01,0.60);
+        pBottomControllerArm.setThresholdValue(2);
         telemetry.update();
 
 
@@ -189,11 +215,16 @@ public class TeleOp extends LinearOpMode {
 
 
             double max;
+            double sensitivity = 5.0;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
+
             double axial = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
+         //       double axial = Math.abs(axial1)/axial1 * (Math.pow(sensitivity, Math.abs(axial1)) - 1) / (sensitivity - 1);
             double lateral = gamepad1.left_stick_x;
+         //       double lateral = Math.abs(lateral1)/lateral1 * (Math.pow(sensitivity, Math.abs(lateral1)) - 1) / (sensitivity - 1);
             double yaw = gamepad1.right_stick_x;
+         //       double yaw = Math.abs(yaw1)/yaw1*(Math.pow(sensitivity, Math.abs(yaw1)) - 1)/(sensitivity - 1);
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -239,17 +270,67 @@ public class TeleOp extends LinearOpMode {
             rightBack.setPower(rightBackPower);
 
             //extender
-            if (gamepad1.left_bumper)
+            // code change is to increment extender position when moving in and out
+            // for  each increment
+
+
+                // extender
+            extenderPosition = extender.getPosition();
+            if (gamepad1.left_bumper && extenderPosition >= 0.1 && extenderPosition <= .9 && gamepad1.right_bumper == false)
             {
-                extender.setPosition(.5);
+                    extenderPosition += 0.001; ///adjust last term to change speed
+                    extender.setPosition(extenderPosition);
             }
-            else if (gamepad1.right_bumper)
+            if (gamepad1.right_bumper && extenderPosition >= 0.2 && extenderPosition <= .9 && gamepad1.left_bumper == false) ;
             {
-                extender.setPosition(0);
+                extenderPosition -= 0.001; ///adjust last term to change speed
+                extender.setPosition(extenderPosition);
+            }
+            //change elbow position as arm extends and contracts when elbow is in a sample pickup position
+            //elbowTopPosition = elbowTop.getCurrentPosition();
+//                if (elbowTopPosition > 1400.0){
+//                    // calculate present extended length of arm (the value 5 is the servo position when extender fully retracted) (4 is the servo position when elbow down and wrist touches mat)
+//                    double extenderPosition = (4.5 - extender.getPosition()) * 5.0/4.5; // 0 is the servo position  at pinion wheel touch with the end of the rack (initial setup), one rotation per inch
+//                    if (extenderPosition < 1.125) {
+//                        // calculate theta
+//                        double theta = Math.asin(15.125 / 18.0);
+//                        // calculate phi
+//                        double phi = Math.asin(15.125 / (15.25 + extenderPosition));
+//                        //calculate the required tics for new Betta
+//                        double TicTop = elbowTopMaxTicks - (theta - phi) / radPerTicTop;
+//                        if (TicTop < elbowTopMaxTicks) {
+//                        } //turn on motors to adjust arm to TicTop
+//                        //need to add power to both motors to move to present position to present position plus corrected amount (if extender position is negative then just move extender
+//                    }
+//                }
+//            }
+
+            //wrist
+            if (gamepad1.left_trigger > 0.0 && gamepad1.right_trigger == 0.0)
+            {
+               wrist.setPosition(.375);
+            }
+            else if (gamepad1.left_trigger == 0.0 && gamepad1.right_trigger == 0.0)
+            {
+                wrist.setPosition(.475);
+            }
+            if (gamepad1.right_trigger > 0.0 && gamepad1.left_trigger == 0.0)
+            {
+                wrist.setPosition(.575);
+            }
+
+            //intake-in
+            if (gamepad1.a)
+            {
+                intake2.setPower(1);
+            }
+            else if (gamepad1.b)
+            {
+                intake2.setPower(0);
             }
 
 
-            //intake
+            //intake-out?
             if (gamepad1.x)
             {
                 intake2.setPower(-1);
@@ -261,7 +342,7 @@ public class TeleOp extends LinearOpMode {
                 intake2.setPower(0);
             }
 
-            //outake
+            //outake?
             if (gamepad1.b)
             {
                 intake2.setPower(1);
@@ -274,129 +355,33 @@ public class TeleOp extends LinearOpMode {
             }
 
             //elbowup
-
-            if (gamepad1.dpad_up && elbowBottom.getCurrentPosition()<1600)
+            //double elbowTopPosition = elbowTop.getCurrentPosition();
+            //double elbowFactor = 0.3 * Math.sin(Math.PI*(elbowTopPosition/elbowTopMaxTicks/2)) + 0.2;
+            double elbowFactor = 0.3;
+             if (gamepad1.dpad_up && elbowTop.getCurrentPosition()<elbowTopMaxTicks)
             {
-                elbowTop.setPower(.60);
-                elbowBottom.setPower(.60);
-                pcontrollerArm.setSetPoint(elbowTop.getCurrentPosition());
-                pcontrollerArm.setSetPoint(elbowBottom.getCurrentPosition());
+                //elbowTop.setPower(elbowFactor);
+                //elbowBottom.setPower(elbowFactor);
+                elbowTop.setVelocity(400);
+                elbowBottom.setVelocity(400);
+                pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
+                pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
             }
 
-            //elbowdown
-           else if (gamepad1.dpad_down && elbowTop.getCurrentPosition()>0)
+            // elbowdown
+            else if (gamepad1.dpad_down && elbowTop.getCurrentPosition()>50)
             {
-                elbowTop.setPower(-.45);
-                elbowBottom.setPower(-.45);
-                pcontrollerArm.setSetPoint(elbowTop.getCurrentPosition());
-                pcontrollerArm.setSetPoint(elbowBottom.getCurrentPosition());
-            }
-           else
-            {
-                updateArmPosition();
+                //elbowTop.setPower(-elbowFactor);
+                //elbowBottom.setPower(-elbowFactor);
+                elbowTop.setVelocity(-400);
+                elbowBottom.setVelocity(-400);
+                pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
+                pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
             }
 
- // State
-            if(gamepad1.a && state == 0 && !statePreValue)
-            {
-                statePreValue = true;
-                pcontrollerArm.setSetPoint(Constants.LIFT_PICKUP);
-                //intakeStopwatch.reset();
-                state++;
-            }
-
-            if(state == 1 && gamepad1.a && !statePreValue)
-            {
-                statePreValue = true;
-                extender.setPosition(0.1);
-                state++;
-                //intakeStopwatch.reset();
-
-            }
-
-            if(state == 2 && gamepad1.a && !statePreValue)
-            {
-                statePreValue = true;
-                extender.setPosition(0.5);
-                pcontrollerArm.setSetPoint(50);
-                state=0;
-                //intakeStopwatch.reset();
-
-            }
-
-            statePreValue = gamepad1.a;
-
-
-
-
-
-
-
-
-//           //Untested state machine
-//           switch (grabAndDrop) {
-//               case GRAB_SAMPLE:
-//               {
-//                   if(gamepad1.a && state == 0)
-//                   {
-//                       pcontrollerArm.setSetPoint(Constants.LIFT_PICKUP);
-//                       intake.setPower(1);
-//                       extender.setPosition(Constants.EXTENDER_OUT);
-//                       intakeStopwatch.reset();
-//                       state++;
-//                       grabAndDrop = GrabAndDrop.DRIVE;
-//                   }
-//                   break;
-//               }
-//               case DRIVE:
-//               {
-//                   //if the intake has been running for a bit then turn it off so we can drive
-//                   if(state == 1 && gamepad1.right_bumper)
-//                   {
-//                       intake.setPower(0);
-//                       extender.setPosition(Constants.EXTENDER_SAFE);
-//                       pcontrollerArm.setSetPoint(500);
-//                       state++;
-//                       intakeStopwatch.reset();
-//                       grabAndDrop = GrabAndDrop.DROP;
-//                   }
-//                   break;
-//               }
-//               case DROP:
-//               {
-//                   if(gamepad1.right_bumper && state == 2 && intakeStopwatch.seconds() > 1)
-//                   {
-//                       pcontrollerArm.setSetPoint(Constants.LIFT_UP);
-//                       extender.setPosition(Constants.EXTENDER_OUT);
-//                       intake.setPower(-1);
-//                       intakeStopwatch.reset();
-//                       state++;
-//                       grabAndDrop = GrabAndDrop.HOME;
-//                   }
-//                   break;
-//               }               case HOME:
-//               {
-//                   if (gamepad1.right_trigger > 0.2 && state == 3)
-//                   {
-//                       pcontrollerArm.setSetPoint(Constants.LIFT_HOME);
-//                       extender.setPosition(Constants.EXTENDER_SAFE);
-//                       intake.setPower(0);
-//                       intakeStopwatch.reset();
-//                       state = 0;
-//                       grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
-//                   }
-//                   break;
-//               }
-//
-//           }
-
-           if(gamepad1.right_trigger > 0.2)
-           {
-               grabAndDrop = GrabAndDrop.HOME;
-           }
-            //get rotation
-            //turn the robot
-            // apply power to specific wheels
+            else {
+                 updateArmPosition();
+             }
 
 
             // Show the elapsed game time and wheel power.
@@ -410,9 +395,13 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("elbowBottom Power", elbowBottom.getPower());
             telemetry.addData("elbowTop Position", elbowTop.getCurrentPosition());
             telemetry.addData("elbowBottom Position", elbowBottom.getCurrentPosition());
-            telemetry.addData("pcontroller set pt ", pcontrollerArm.setPoint);
+            telemetry.addData("p Top controller set pt ", pTopControllerArm.setPoint);
+            telemetry.addData("p Bottom controller set pt ", pBottomControllerArm.setPoint);
             telemetry.addData("state", state);
-            telemetry.addData("extender", extender.getPosition());
+            telemetry.addData("Extender Position", extender.getPosition());
+            telemetry.addData("Double Extender Position", extenderPosition);
+            telemetry.addData("Wrist Position", wrist.getPosition());
+            telemetry.addData("Left Bumper", gamepad1.left_bumper);
 
 
             //telemetry.addData("intake", intake.getPower());
@@ -422,17 +411,40 @@ public class TeleOp extends LinearOpMode {
 
     public void updateArmPosition ()
     {
-        armPosition = elbowTop.getCurrentPosition();
-        if (armPosition < pcontrollerArm.setPoint)
+        int topArmMotorPosition = elbowTop.getCurrentPosition();
+        int bottomArmMotorPosition = elbowBottom.getCurrentPosition();
+
+        if (topArmMotorPosition < pTopControllerArm.setPoint)
         {
-            elbowTop.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
-            //elbowBottom.setPower(.01 + pcontrollerArm.getComputedOutput(armPosition));
+            elbowTop.setPower(.01 + pTopControllerArm.getComputedOutput(topArmMotorPosition));
         }
         else
         {
-            elbowTop.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
-            //elbowBottom.setPower(.01 - pcontrollerArm.getComputedOutput(armPosition));
+            elbowTop.setPower(.01 - pTopControllerArm.getComputedOutput(topArmMotorPosition));
         }
+
+        if (bottomArmMotorPosition < pBottomControllerArm.setPoint)
+        {
+            elbowBottom.setPower(.01 + pBottomControllerArm.getComputedOutput(bottomArmMotorPosition));
+        }
+        else
+        {
+
+            elbowBottom.setPower(.01 - pBottomControllerArm.getComputedOutput(bottomArmMotorPosition));
+        }
+
+
     }
+
+    public int averageArmPosition () {
+        int topArmMotorPosition = elbowTop.getCurrentPosition();
+        int bottomArmMotorPosition = elbowBottom.getCurrentPosition();
+
+        return (topArmMotorPosition+bottomArmMotorPosition)/2;
+
+    }
+
+
+
 }
 
