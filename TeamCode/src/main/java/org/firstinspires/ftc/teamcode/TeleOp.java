@@ -140,7 +140,7 @@ public class TeleOp extends LinearOpMode {
         intake2.setPower(0);
         extender = hardwareMap.get(Servo.class, "extender");//port 1
         //extender.setPosition(0.0); // use position 0 when installing the extender, otherwise use the position 6
-        extender.setPosition(0.8);
+        extender.setPosition(0.4);
         wrist = hardwareMap.get(Servo.class, "wrist");//expansion hub port 1
         wrist.setPosition(.475);
         elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -276,14 +276,14 @@ public class TeleOp extends LinearOpMode {
 
                 // extender
             extenderPosition = extender.getPosition();
-            if (gamepad1.left_bumper && extenderPosition >= 0.1 && extenderPosition <= .9 && gamepad1.right_bumper == false)
+            if (gamepad1.left_bumper && extenderPosition >= 0.05 && extenderPosition <= 0.4  && !gamepad1.right_bumper)
             {
-                    extenderPosition += 0.001; ///adjust last term to change speed
+                    extenderPosition += 0.005; ///adjust last term to change speed
                     extender.setPosition(extenderPosition);
             }
-            if (gamepad1.right_bumper && extenderPosition >= 0.2 && extenderPosition <= .9 && gamepad1.left_bumper == false) ;
+            if (gamepad1.right_bumper && extenderPosition >= 0.11 && extenderPosition <= 0.41 && !gamepad1.left_bumper)
             {
-                extenderPosition -= 0.001; ///adjust last term to change speed
+                extenderPosition -= 0.005; ///adjust last term to change speed
                 extender.setPosition(extenderPosition);
             }
             //change elbow position as arm extends and contracts when elbow is in a sample pickup position
@@ -320,14 +320,14 @@ public class TeleOp extends LinearOpMode {
             }
 
             //intake-in
-            if (gamepad1.a)
-            {
-                intake2.setPower(1);
-            }
-            else if (gamepad1.b)
-            {
-                intake2.setPower(0);
-            }
+//            if (gamepad1.a)
+//            {
+//                intake2.setPower(1);
+//            }
+//            else if (gamepad1.b)
+//            {
+//                intake2.setPower(0);
+//            }
 
 
             //intake-out?
@@ -402,6 +402,7 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Double Extender Position", extenderPosition);
             telemetry.addData("Wrist Position", wrist.getPosition());
             telemetry.addData("Left Bumper", gamepad1.left_bumper);
+            telemetry.addData("Right Bumper", gamepad1.right_bumper);
 
 
             //telemetry.addData("intake", intake.getPower());
