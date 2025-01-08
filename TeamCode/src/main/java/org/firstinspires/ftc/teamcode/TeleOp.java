@@ -90,6 +90,7 @@ public class TeleOp extends LinearOpMode {
     public DcMotorEx elbowTop = null;
     public DcMotorEx elbowBottom = null;
     public ElapsedTime intakeStopwatch = null;
+    public ElapsedTime rumbleTimer = null;
     public boolean isOutaking = false;
     public boolean isIntaking = false;
     public boolean elbowFunctionUp = false;
@@ -110,6 +111,10 @@ public class TeleOp extends LinearOpMode {
     public double radPerTicTop;
     public double radPerTicBottom;
     public double extenderPosition;
+    public boolean hasRumbled;
+    public boolean xAlreadyPressed;
+    public boolean crServoOn;
+    public boolean bAlreadyPressed;
 
 
    enum GrabAndDrop {
@@ -121,7 +126,6 @@ public class TeleOp extends LinearOpMode {
 
    GrabAndDrop grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
 
-
     @Override
     public void runOpMode() {
 
@@ -131,8 +135,13 @@ public class TeleOp extends LinearOpMode {
         leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         intakeStopwatch = new ElapsedTime();
+        rumbleTimer = new ElapsedTime();
 //        intake = hardwareMap.get(CRServo.class, "intake");
         elbowTop = hardwareMap.get(DcMotorEx.class, "elbowTop");
         elbowBottom = hardwareMap.get(DcMotorEx.class, "elbowBottom");
@@ -143,6 +152,7 @@ public class TeleOp extends LinearOpMode {
         extender.setPosition(0.4);
         wrist = hardwareMap.get(Servo.class, "wrist");//expansion hub port 1
         wrist.setPosition(.475);
+        hasRumbled = false;
         elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elbowBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elbowTop.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
@@ -151,6 +161,7 @@ public class TeleOp extends LinearOpMode {
         elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         elbowTop.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         elbowBottom.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
 
         imu = hardwareMap.get(IMU.class, "imu");
         RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.FORWARD, RevHubOrientationOnRobot.UsbFacingDirection.UP);
@@ -188,13 +199,15 @@ public class TeleOp extends LinearOpMode {
         telemetry.addData("radPerTicBottom",radPerTicBottom);
         telemetry.addData("Wrist Position", wrist.getPosition());
         telemetry.addData("Extender Position", extender.getPosition());
+        //telemetry.addData("test", calculateAdjustedInputs(gamepad1.left_stick_x));
+
 
         //intake = hardwareMap.get(CRServo.class, "intake");
-        pTopControllerArm.setInputRange(0, elbowTopMaxTicks);;//////////////////////
+        pTopControllerArm.setInputRange(0, elbowTopMaxTicks);
         pTopControllerArm.setOutputRange(.01,0.60);
         pTopControllerArm.setThresholdValue(2);
 
-        pBottomControllerArm.setInputRange(0, elbowBottomMaxTicks);;////////////////
+        pBottomControllerArm.setInputRange(0, elbowBottomMaxTicks);
         pBottomControllerArm.setOutputRange(.01,0.60);
         pBottomControllerArm.setThresholdValue(2);
         telemetry.update();
@@ -219,12 +232,12 @@ public class TeleOp extends LinearOpMode {
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
 
-            double axial = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-         //       double axial = Math.abs(axial1)/axial1 * (Math.pow(sensitivity, Math.abs(axial1)) - 1) / (sensitivity - 1);
-            double lateral = gamepad1.left_stick_x;
-         //       double lateral = Math.abs(lateral1)/lateral1 * (Math.pow(sensitivity, Math.abs(lateral1)) - 1) / (sensitivity - 1);
-            double yaw = gamepad1.right_stick_x;
-         //       double yaw = Math.abs(yaw1)/yaw1*(Math.pow(sensitivity, Math.abs(yaw1)) - 1)/(sensitivity - 1);
+            double axial = calculateAdjustedInputs(-gamepad1.left_stick_y);  // Note: pushing stick forward gives negative value
+//                double axial1 = Math.abs(axial)/axial * (Math.pow(sensitivity, Math.abs(axial)) - 1) / (sensitivity - 1);
+            double lateral = calculateAdjustedInputs(gamepad1.left_stick_x);
+//                double lateral1 = Math.abs(lateral)/lateral * (Math.pow(sensitivity, Math.abs(lateral)) - 1) / (sensitivity - 1);
+            double yaw = calculateAdjustedInputs(gamepad1.right_stick_x);
+//                double yaw1 = Math.abs(yaw)/yaw*(Math.pow(sensitivity, Math.abs(yaw)) - 1)/(sensitivity - 1);
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -274,15 +287,13 @@ public class TeleOp extends LinearOpMode {
             // for  each increment
 
 
-                // extender
+            // extender
             extenderPosition = extender.getPosition();
-            if (gamepad1.left_bumper && extenderPosition >= 0.05 && extenderPosition <= 0.4  && !gamepad1.right_bumper)
-            {
-                    extenderPosition += 0.005; ///adjust last term to change speed
-                    extender.setPosition(extenderPosition);
+            if (gamepad2.left_bumper && extenderPosition >= 0.05 && extenderPosition <= 0.4 && !gamepad2.right_bumper) {
+                extenderPosition += 0.005; ///adjust last term to change speed
+                extender.setPosition(extenderPosition);
             }
-            if (gamepad1.right_bumper && extenderPosition >= 0.11 && extenderPosition <= 0.41 && !gamepad1.left_bumper)
-            {
+            if (gamepad2.right_bumper && extenderPosition >= 0.11 && extenderPosition <= 0.41 && !gamepad2.left_bumper) {
                 extenderPosition -= 0.005; ///adjust last term to change speed
                 extender.setPosition(extenderPosition);
             }
@@ -306,59 +317,54 @@ public class TeleOp extends LinearOpMode {
 //            }
 
             //wrist
-            if (gamepad1.left_trigger > 0.0 && gamepad1.right_trigger == 0.0)
-            {
-               wrist.setPosition(.375);
-            }
-            else if (gamepad1.left_trigger == 0.0 && gamepad1.right_trigger == 0.0)
-            {
+            boolean isBusy = false;
+            if (gamepad2.left_trigger > 0.0 && !isBusy) {
+                wrist.setPosition(.075);
+                isBusy = true;
+            } else if (gamepad2.left_trigger == 0.0 && gamepad2.right_trigger == 0.0) {
                 wrist.setPosition(.475);
             }
-            if (gamepad1.right_trigger > 0.0 && gamepad1.left_trigger == 0.0)
-            {
-                wrist.setPosition(.575);
+            if (gamepad2.right_trigger > 0.0 && !isBusy) {
+                wrist.setPosition(.875);
+                isBusy = true;
             }
 
-            //intake-in
-//            if (gamepad1.a)
-//            {
-//                intake2.setPower(1);
-//            }
-//            else if (gamepad1.b)
-//            {
-//                intake2.setPower(0);
-//            }
+            //intake-toggle
+           if (gamepad2.x && !xAlreadyPressed && !gamepad2.b)
+           {
+               crServoOn = !crServoOn;
+               if (crServoOn)
+               {
+                   intake2.setPower(1);
+               }
+               else
+               {
+                   intake2.setPower(0);
+               }
+           }
+           xAlreadyPressed = gamepad2.x;
 
+            //intake-out
+            if (gamepad2.b && !bAlreadyPressed && !gamepad2.x)
+           {
+               crServoOn = !crServoOn;
+               if (crServoOn)
+               {
+                   intake2.setPower(1);
+               }
+               else
+               {
+                   intake2.setPower(0);
+               }
+           }
+           bAlreadyPressed = gamepad2.b;
 
-            //intake-out?
-            if (gamepad1.x)
-            {
-                intake2.setPower(-1);
-                isIntaking = true;
-                intakeStopwatch.reset();
-            }
-            else if (isIntaking)
-            {
-                intake2.setPower(0);
-            }
-
-            //outake?
-            if (gamepad1.b)
-            {
-                intake2.setPower(1);
-                //intakeStopwatch.reset();
-                isOutaking = true;
-            } else if (isOutaking)
-            {
-                intake2.setPower(0);
-                isOutaking = false;
-            }
 
             //elbowup
             //double elbowTopPosition = elbowTop.getCurrentPosition();
             //double elbowFactor = 0.3 * Math.sin(Math.PI*(elbowTopPosition/elbowTopMaxTicks/2)) + 0.2;
             double elbowFactor = 0.3;
-             if (gamepad1.dpad_up && elbowTop.getCurrentPosition()<elbowTopMaxTicks)
+             if (gamepad2.dpad_up && elbowTop.getCurrentPosition()<elbowTopMaxTicks)
             {
                 //elbowTop.setPower(elbowFactor);
                 //elbowBottom.setPower(elbowFactor);
@@ -369,7 +375,7 @@ public class TeleOp extends LinearOpMode {
             }
 
             // elbowdown
-            else if (gamepad1.dpad_down && elbowTop.getCurrentPosition()>50)
+            else if (gamepad2.dpad_down && elbowTop.getCurrentPosition()>20)
             {
                 //elbowTop.setPower(-elbowFactor);
                 //elbowBottom.setPower(-elbowFactor);
@@ -383,12 +389,17 @@ public class TeleOp extends LinearOpMode {
                  updateArmPosition();
              }
 
+            if(rumbleTimer.seconds() >= 120 && !hasRumbled)
+            {
+                gamepad1.rumble(100);
+                hasRumbled = true;
+            }
+
 
             // Show the elapsed game time and wheel power.
 //            telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", leftBackPower, rightBackPower);
-            telemetry.addData("Is outake Active:", isOutaking);
             telemetry.addData("intake:", intake2.getPower());
             telemetry.addData("rotation", imu.getRobotYawPitchRollAngles());
             telemetry.addData("elbowTop Power", elbowTop.getPower());
@@ -397,12 +408,17 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("elbowBottom Position", elbowBottom.getCurrentPosition());
             telemetry.addData("p Top controller set pt ", pTopControllerArm.setPoint);
             telemetry.addData("p Bottom controller set pt ", pBottomControllerArm.setPoint);
-            telemetry.addData("state", state);
             telemetry.addData("Extender Position", extender.getPosition());
             telemetry.addData("Double Extender Position", extenderPosition);
             telemetry.addData("Wrist Position", wrist.getPosition());
-            telemetry.addData("Left Bumper", gamepad1.left_bumper);
-            telemetry.addData("Right Bumper", gamepad1.right_bumper);
+            telemetry.addData("axial ", axial);
+            telemetry.addData("lateral ", lateral);
+            telemetry.addData("yaw ", yaw);
+            telemetry.addData("isBusy ", isBusy);
+            telemetry.addData("Rumble Timer", rumbleTimer);
+            telemetry.addData("Has Rumbled", hasRumbled);
+            telemetry.addData("xAlreadyPressed", xAlreadyPressed);
+            telemetry.addData("bAlreadyPressed", bAlreadyPressed);
 
 
             //telemetry.addData("intake", intake.getPower());
@@ -444,6 +460,22 @@ public class TeleOp extends LinearOpMode {
         return (topArmMotorPosition+bottomArmMotorPosition)/2;
 
     }
+
+    public double calculateAdjustedInputs(double input)
+    {
+
+        if(input < 0)
+        {
+            return -(Math.pow(Math.abs(input), 1.5));
+        }
+        else
+        {
+            return (Math.pow(input, 1.5));
+        }
+
+
+    }
+
 
 
 
