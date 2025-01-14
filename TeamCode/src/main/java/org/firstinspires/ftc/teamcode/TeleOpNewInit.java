@@ -33,12 +33,12 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 /*
  * This file contains an example of a Linear "OpMode".
@@ -69,8 +69,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name="Basic: Sink", group="Linear OpMode")
-//@Disabled
-public class TeleOp extends LinearOpMode {
+@Disabled
+public class TeleOpNewInit extends LinearOpMode {
 
 
     // Declare OpMode members for each of the 4 motors.
@@ -126,50 +126,12 @@ public class TeleOp extends LinearOpMode {
         HOME,
     }
 
-
    GrabAndDrop grabAndDrop = GrabAndDrop.GRAB_SAMPLE;
 
     @Override
     public void runOpMode() {
-        // Initialize the hardware variables. Note that the strings used here must correspond
-        // to the names assigned during the robot configuration step on the DS or RC devices.
-        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
-        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        intakeStopwatch = new ElapsedTime();
-        rumbleTimer = new ElapsedTime();
-//        intake = hardwareMap.get(CRServo.class, "intake");
-        elbowTop = hardwareMap.get(DcMotorEx.class, "elbowTop");
-        elbowBottom = hardwareMap.get(DcMotorEx.class, "elbowBottom");
-        intake2 = hardwareMap.get(CRServo.class, "intake2"); // expansion hub port 0
-        intake2.setPower(0);
-        extender = hardwareMap.get(Servo.class, "extender");//port 1
-        //extender.setPosition(0.0); // use position 0 when installing the extender, otherwise use the position 6
-        extender.setPosition(0.4);
-        wrist = hardwareMap.get(Servo.class, "wrist");//expansion hub port 1
-        wrist.setPosition(.475);
-        hasRumbled = false;
-        elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        elbowBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        elbowTop.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        elbowTop.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        elbowTop.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        elbowBottom.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-
-
-        imu = hardwareMap.get(IMU.class, "imu");
-        RevHubOrientationOnRobot hubOrientationOnRobot = new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.FORWARD, RevHubOrientationOnRobot.UsbFacingDirection.UP);
-        IMU.Parameters parameters = new IMU.Parameters(hubOrientationOnRobot);
-        imu.initialize(parameters);
-
+        //changed init code for reusability
+        initRobot();
 
 
 //        extender = hardwareMap.get(Servo.class, "extender");
@@ -190,7 +152,6 @@ public class TeleOp extends LinearOpMode {
         rightBack.setDirection(DcMotor.Direction.FORWARD);
         elbowTop.setDirection(DcMotorSimple.Direction.REVERSE);
         elbowBottom.setDirection(DcMotorSimple.Direction.FORWARD);
-
         ticsPerRotationTop= elbowTop.getMotorType().getTicksPerRev();
         ticsPerRotationBottom = elbowBottom.getMotorType().getTicksPerRev();
         radPerTicTop = Math.PI/(ticsPerRotationTop);
@@ -292,13 +253,11 @@ public class TeleOp extends LinearOpMode {
 
             // extender
             extenderPosition = extender.getPosition();
-            //this retracts arm
-            if (gamepad2.left_bumper && extenderPosition >= 0.05 && extenderPosition <= 0.45 && !gamepad2.right_bumper) {
+            if (gamepad2.left_bumper && extenderPosition >= 0.05 && extenderPosition <= 0.425 && !gamepad2.right_bumper) {
                 extenderPosition += 0.005; ///adjust last term to change speed
                 extender.setPosition(extenderPosition);
             }
-            // this extends arm
-            if (gamepad2.right_bumper && extenderPosition >= 0.11 && extenderPosition <= 0.46 && !gamepad2.left_bumper) {
+            if (gamepad2.right_bumper && extenderPosition >= 0.11 && extenderPosition <= 0.425 && !gamepad2.left_bumper) {
                 extenderPosition -= 0.005; ///adjust last term to change speed
                 extender.setPosition(extenderPosition);
             }
@@ -399,13 +358,6 @@ public class TeleOp extends LinearOpMode {
                 gamepad1.rumble(100);
                 hasRumbled = true;
             }
-            if(gamepad2.guide)
-            {
-                elbowTop.setPower(-1);
-                elbowBottom.setPower(-1);
-                pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
-                pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
-            }
 
 
             // Show the elapsed game time and wheel power.
@@ -488,7 +440,6 @@ public class TeleOp extends LinearOpMode {
 
     }
 
-    /* - updated, reusable init present in main teleop
     public void initRobot()
     {
         // Initialize the hardware variables. Note that the strings used here must correspond
@@ -553,7 +504,7 @@ public class TeleOp extends LinearOpMode {
         elbowBottom = hardwareMap.get(DcMotorEx.class, "elbowBottom");
         hasRumbled = false;
     }
-    */
+
 
 
 
