@@ -117,6 +117,7 @@ public class TeleOp extends LinearOpMode {
     public boolean xAlreadyPressed;
     public boolean crServoOn;
     public boolean bAlreadyPressed;
+    public boolean extenderMoving = false;
 
 
    enum GrabAndDrop {
@@ -301,7 +302,10 @@ public class TeleOp extends LinearOpMode {
             if (gamepad2.right_bumper && extenderPosition >= 0.11 && extenderPosition <= 0.46 && !gamepad2.left_bumper) {
                 extenderPosition -= 0.005; ///adjust last term to change speed
                 extender.setPosition(extenderPosition);
+                extenderMoving = true;
             }
+
+
             //change elbow position as arm extends and contracts when elbow is in a sample pickup position
             //elbowTopPosition = elbowTop.getCurrentPosition();
 //                if (elbowTopPosition > 1400.0){
@@ -320,6 +324,7 @@ public class TeleOp extends LinearOpMode {
 //                    }
 //                }
 //            }
+
 
             //wrist
             boolean isBusy = false;
@@ -431,6 +436,7 @@ public class TeleOp extends LinearOpMode {
             telemetry.addData("Has Rumbled", hasRumbled);
             telemetry.addData("xAlreadyPressed", xAlreadyPressed);
             telemetry.addData("bAlreadyPressed", bAlreadyPressed);
+            telemetry.addData("extenderMoving", extenderMoving);
 
 
             //telemetry.addData("intake", intake.getPower());
@@ -487,6 +493,7 @@ public class TeleOp extends LinearOpMode {
 
 
     }
+//    public double calculateArmAngle() {}
 
     /* - updated, reusable init present in main teleop
     public void initRobot()
