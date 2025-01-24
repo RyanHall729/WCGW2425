@@ -30,7 +30,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -101,8 +100,8 @@ public class TeleOp extends LinearOpMode {
     public int armPosition = 0;
     public Pcontroller pTopControllerArm = new Pcontroller(.005);
     public Pcontroller pBottomControllerArm = new Pcontroller(.005);
-    public int elbowTopMaxTicks = 1607;
-    public int elbowBottomMaxTicks = 1559;
+    public int elbowTopMaxTicks = 2368;
+    public int elbowBottomMaxTicks = 2357;
     public int state = 0;
     public boolean statePreValue = false;
     public double sensitivity = 5;
@@ -118,6 +117,7 @@ public class TeleOp extends LinearOpMode {
     public boolean crServoOn;
     public boolean bAlreadyPressed;
     public boolean extenderMoving = false;
+    public double elbowSpeed = -600;
 
 
    enum GrabAndDrop {
@@ -203,6 +203,11 @@ public class TeleOp extends LinearOpMode {
         telemetry.addData("radPerTicBottom",radPerTicBottom);
         telemetry.addData("Wrist Position", wrist.getPosition());
         telemetry.addData("Extender Position", extender.getPosition());
+        telemetry.addData("elbowTop Position", elbowTop.getCurrentPosition());
+        telemetry.addData("elbowBottom Position", elbowBottom.getCurrentPosition());
+
+
+
         //telemetry.addData("test", calculateAdjustedInputs(gamepad1.left_stick_x));
 
 
@@ -376,10 +381,9 @@ public class TeleOp extends LinearOpMode {
             double elbowFactor = 0.3;
              if (gamepad2.dpad_up && elbowTop.getCurrentPosition()<elbowTopMaxTicks)
             {
-                //elbowTop.setPower(elbowFactor);
-                //elbowBottom.setPower(elbowFactor);
-                elbowTop.setVelocity(400);
-                elbowBottom.setVelocity(400);
+
+                elbowTop.setVelocity(Math.abs(elbowSpeed));
+                elbowBottom.setVelocity(Math.abs(elbowSpeed));
                 pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
                 pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
             }
@@ -387,10 +391,9 @@ public class TeleOp extends LinearOpMode {
             // elbowdown
             else if (gamepad2.dpad_down && elbowTop.getCurrentPosition()>20)
             {
-                //elbowTop.setPower(-elbowFactor);
-                //elbowBottom.setPower(-elbowFactor);
-                elbowTop.setVelocity(-400);
-                elbowBottom.setVelocity(-400);
+
+                elbowTop.setVelocity(elbowSpeed);
+                elbowBottom.setVelocity(elbowSpeed);
                 pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
                 pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
             }
