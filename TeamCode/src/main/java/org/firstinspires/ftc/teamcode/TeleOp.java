@@ -457,10 +457,9 @@ public class TeleOp extends LinearOpMode {
                {
                     if(gamepad2.y)
                     {
-                        extender.setPosition(0.55);
-                            pTopControllerArm.setSetPoint(1425);
-                            pBottomControllerArm.setSetPoint(1425);
-                            extender.setPosition(0.15);
+                            pTopControllerArm.setSetPoint(1339);
+                            pBottomControllerArm.setSetPoint(1339);
+                            extender.setPosition(0.2);
                    }
                }
                case HIGH_STATE_RETRACT:
