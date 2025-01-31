@@ -457,8 +457,8 @@ public class TeleOp extends LinearOpMode {
                {
                     if(gamepad2.y)
                     {
-                            pTopControllerArm.setSetPoint(1339);
-                            pBottomControllerArm.setSetPoint(1339);
+                            pTopControllerArm.setSetPoint(1208);
+                            pBottomControllerArm.setSetPoint(1208);
                             extender.setPosition(0.2);
                    }
                }
@@ -466,8 +466,8 @@ public class TeleOp extends LinearOpMode {
                {
                    if(gamepad2.a) {
                        extender.setPosition(0.55);
-                           pTopControllerArm.setSetPoint(2200);
-                           pBottomControllerArm.setSetPoint(2200);
+                           pTopControllerArm.setSetPoint(1954);
+                           pBottomControllerArm.setSetPoint(1954);
                    }
 
               }

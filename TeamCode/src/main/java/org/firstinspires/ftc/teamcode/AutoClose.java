@@ -38,7 +38,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit; //********************************
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 /*
@@ -132,16 +132,16 @@ public class AutoClose extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    static final double     DRIVE_SPEED             = 0.4;     // Max driving speed for better distance accuracy.
-    static final double     TURN_SPEED              = 0.2;     // Max turn speed to limit turn rate.
-    static final double     HEADING_THRESHOLD       = 1.0 ;    // How close must the heading get to the target before moving to next step.
+    static final double     DRIVE_SPEED             = 0.2;     // Max driving speed for better distance accuracy.
+    static final double     TURN_SPEED              = 0.1;     // Max turn speed to limit turn rate.
+    static final double     HEADING_THRESHOLD       = 0.5 ;    // How close must the heading get to the target before moving to next step.
                                                                // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
     // Increase these numbers if the heading does not correct strongly enough (eg: a heavy robot or using tracks)
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
-    static final double     P_TURN_GAIN            = 0.02;     // Larger is more responsive, but also less stable.
-    static final double     P_DRIVE_GAIN           = 0.03;     // Larger is more responsive, but also less stable.
+    static final double     P_TURN_GAIN            = 0.03;     // Larger is more responsive, but also less stable.
+    static final double     P_DRIVE_GAIN           = 0.02;     // Larger is more responsive, but also less stable.
 
 
     @Override
@@ -238,8 +238,8 @@ public class AutoClose extends LinearOpMode {
 //
 //        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
 
-        driveStraight(DRIVE_SPEED, 10, 0.0);
-        holdHeading(DRIVE_SPEED, 0.0, 1);
+        driveStraight(DRIVE_SPEED, 29.5, 0.0); //*************************************************************************
+//        holdHeading(DRIVE_SPEED, 0.0, 1);                   //*************************************************************************
         //moveRobot(0, 0);
 
         telemetry.addData("Path", "Complete");
@@ -304,7 +304,7 @@ public class AutoClose extends LinearOpMode {
             maxDriveSpeed = Math.abs(maxDriveSpeed);
             moveRobot(maxDriveSpeed, 0);
 
-            // keep looping while we are still active, and BOTH motors are running.
+            // keep looping while we are still active, and BOTH motors are running. ************************************
             while (opModeIsActive() &&
 //                   (leftDrive.isBusy() && rightDrive.isBusy())) {
                 (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy())) {
@@ -312,9 +312,9 @@ public class AutoClose extends LinearOpMode {
                 // Determine required steering to keep on heading
                 turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
 
-                // if driving in reverse, the motor correction also needs to be reversed
+                // if driving in reverse, the motor correction also needs to be reversed//***********************************************
                 if (distance < 0)
-                    turnSpeed *= -1.0;
+                    turnSpeed *= 0.05; //***********************************************************************************************
 
                 // Apply the turning correction to the current driving speed.
                 moveRobot(driveSpeed, turnSpeed);

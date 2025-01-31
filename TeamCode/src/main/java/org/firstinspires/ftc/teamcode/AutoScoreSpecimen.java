@@ -249,30 +249,31 @@ public class AutoScoreSpecimen extends LinearOpMode {
 //        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
 
 //      beginning of Auto
-        driveStraight(DRIVE_SPEED, 24, 0.0);
+        driveStraight(DRIVE_SPEED, 31, 0.0);
+        driveStraight(DRIVE_SPEED, -1, 0.0);
 //      attach specimen
-        pTopControllerArm.setSetPoint(100);
-        pBottomControllerArm.setSetPoint(100);
-//      move away from submersible9=-o[]
+        pTopControllerArm.setSetPoint(1212);
+        pBottomControllerArm.setSetPoint(1237);
+//      move away from submersible
         
-        driveStraight(DRIVE_SPEED, -2, 0.0);
-        pBottomControllerArm.setSetPoint(0);
-        pTopControllerArm.setSetPoint(0);
-        turnToHeading(turnSpeed, 90);
-        holdHeading(turnSpeed, 90, 0.5);
+//        driveStraight(DRIVE_SPEED, -2, 0.0);
+//        pBottomControllerArm.setSetPoint(0);
+//        pTopControllerArm.setSetPoint(0);
+//        turnToHeading(turnSpeed, 90);
+//        holdHeading(turnSpeed, 90, 0.5);
 //      move towards ascent zone
-        driveStraight(DRIVE_SPEED, 40, 90);
-        turnToHeading(turnSpeed, 0);
-        holdHeading(turnSpeed,0, 0.5);
-//      move into ascent zone
-        driveStraight(DRIVE_SPEED, 36, 0);
-//      level 1 ascent position
-        turnToHeading(turnSpeed, 270);
-        holdHeading(turnSpeed, 270, 0.5);
-        driveStraight(DRIVE_SPEED, 5, 270);
-//      level 1 ascent
-        pTopControllerArm.setSetPoint(105);
-        pBottomControllerArm.setSetPoint(105);
+//        driveStraight(DRIVE_SPEED, 40, 90);
+//        turnToHeading(turnSpeed, 0);
+//        holdHeading(turnSpeed,0, 0.5);
+////      move into ascent zone
+//        driveStraight(DRIVE_SPEED, 36, 0);
+////      level 1 ascent position
+//        turnToHeading(turnSpeed, 270);
+//        holdHeading(turnSpeed, 270, 0.5);
+//        driveStraight(DRIVE_SPEED, 5, 270);
+////      level 1 ascent
+//        pTopControllerArm.setSetPoint(105);
+//        pBottomControllerArm.setSetPoint(105);
         //holdHeading(DRIVE_SPEED, 0.0, 1);
         moveRobot(0, 0);
 
