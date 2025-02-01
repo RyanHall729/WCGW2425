@@ -239,7 +239,7 @@ public class AutoClose extends LinearOpMode {
 //
 //        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
 
-        driveStraight(DRIVE_SPEED, 10, 0.0); //*************************************************************************
+        driveStraight(DRIVE_SPEED, -15, 0.0); //*************************************************************************
 //        holdHeading(DRIVE_SPEED, 0.0, 1);                   //*************************************************************************
         //moveRobot(0, 0);
 

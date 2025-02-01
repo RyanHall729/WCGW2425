@@ -112,6 +112,7 @@ public class AutoScoreSpecimen extends LinearOpMode {
     public Pcontroller pTopControllerArm = new Pcontroller(.005);
     public Pcontroller pBottomControllerArm = new Pcontroller(.005);
     public ElapsedTime scoreTimer = null;
+    public int stepAway;
     private IMU             imu         = null; // Control/Expansion Hub IMU
 
     private double          headingError  = 0;
@@ -174,15 +175,12 @@ public class AutoScoreSpecimen extends LinearOpMode {
         wrist.setPosition(.425);
         elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         elbowBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        elbowTop.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        elbowTop.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        elbowTop.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        elbowBottom.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-
-//        leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
-//        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
+        elbowTop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elbowBottom.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        elbowTop.setTargetPosition(1200);
+        elbowBottom.setTargetPosition(1200);
+        elbowTop.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        elbowBottom.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
         leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
@@ -249,6 +247,8 @@ public class AutoScoreSpecimen extends LinearOpMode {
             telemetry.addData("Position of LF motor: ", leftFront.getCurrentPosition());
             telemetry.addData("Position of LB motor: ", leftBack.getCurrentPosition());
             telemetry.addData("IMU yaw", imu.getRobotYawPitchRollAngles().getYaw());
+            telemetry.addData("TopElbow",elbowTop.getCurrentPosition());
+            telemetry.addData("BottomElbow",elbowBottom.getCurrentPosition());
             telemetry.update();
         }
 
@@ -261,76 +261,53 @@ public class AutoScoreSpecimen extends LinearOpMode {
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         imu.resetYaw();
 
-        // Step through each leg of the path,
-        // Notes:   Reverse movement is obtained by setting a negative distance (not speed)
-        //          holdHeading() is used after turns to let the heading stabilize
-        //          Add a sleep(2000) after any step to keep the telemetry data visible for review
-
-//        driveStraight(DRIVE_SPEED, 24.0, 0.0);    // Drive Forward 24"
-//        turnToHeading( TURN_SPEED, -45.0);               // Turn  CW to -45 Degrees
-//        holdHeading( TURN_SPEED, -45.0, 0.5);   // Hold -45 Deg heading for a 1/2 second
-//
-//        driveStraight(DRIVE_SPEED, 17.0, -45.0);  // Drive Forward 17" at -45 degrees (12"x and 12"y)
-//        turnToHeading( TURN_SPEED,  45.0);               // Turn  CCW  to  45 Degrees
-//        holdHeading( TURN_SPEED,  45.0, 0.5);    // Hold  45 Deg heading for a 1/2 second
-//
-//        driveStraight(DRIVE_SPEED, 17.0, 45.0);  // Drive Forward 17" at 45 degrees (-12"x and 12"y)
-//        turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
-//        holdHeading( TURN_SPEED,   0.0, 1.0);    // Hold  0 Deg heading for 1 second
-//
-//        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
-
-//      beginning of Auto
+//      beginning of Auto - Drive to submersible
         driveStraight(DRIVE_SPEED, 29, 0.0);
         turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
-        holdHeading( TURN_SPEED,   0.0, 1);    // Hold  0 Deg heading for 1 second
+        holdHeading( TURN_SPEED,   0.0, .25);    // Hold  0 Deg heading for 1 second
 //      `  attach specimen
-//        pTopControllerArm.setSetPoint(1212);
-//        pBottomControllerArm.setSetPoint(1237);
-        double elbowSpeed = 200;
-        scoreTimer.reset();
-
-       while(scoreTimer.seconds() < 3.0 && opModeIsActive()) {
-            elbowTop.setVelocity(elbowSpeed);
-            elbowBottom.setVelocity(elbowSpeed);
+        elbowTop.setTargetPosition(1200);
+        elbowBottom.setTargetPosition(1200);
+       while(elbowTop.isBusy() && opModeIsActive()) {
+            elbowTop.setPower(-.5);
+            elbowBottom.setPower(-.5);
             pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
             pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
-//           pTopControllerArm.setSetPoint(1220);
-//           pBottomControllerArm.setSetPoint(1220);
-//            extender.setPosition(0.2);
-            telemetry.addData("Are we there yet", elbowTop.getCurrentPosition());
-            telemetry.update();
-            sleep(5000);  // Pause to display last telemetry message.
+            pTopControllerArm.setSetPoint(1220);
         }
+//      move away from submersible while lowering a
+        for (stepAway = 1; stepAway < 6; stepAway++) {
+            driveStraight(DRIVE_SPEED, -1, 0.0);
+            turnToHeading(TURN_SPEED, 0.0);               // Turn  CW  to 0 Degrees
+            holdHeading(TURN_SPEED, 0.0, .1);    // Hold  0 Deg heading for 1 second
+            //++++++++
+            elbowTop.setTargetPosition(1200+20*stepAway);
+            elbowBottom.setTargetPosition(1200+20*stepAway);
+            while(elbowTop.isBusy() && opModeIsActive()) {
+                elbowTop.setPower(-.5);
+                elbowBottom.setPower(-.5);
+                pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
+                pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
+                pTopControllerArm.setSetPoint(1200+20*stepAway);
+                //          pBottomControllerArm.setSetPoint(1220);
+            }
+        }
+        // move away from submersible without lowering arm and turn toward home
+        driveStraight(DRIVE_SPEED, -15, 0.0);
+        elbowTop.setTargetPosition(20);
+        elbowBottom.setTargetPosition(20);
+        while(elbowTop.isBusy() && opModeIsActive()) {
+            elbowTop.setPower(-.5);
+            elbowBottom.setPower(-.5);
+            pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
+            pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
+            pTopControllerArm.setSetPoint(20);
+        }
+        // drive to home
 
-//        }while!(pTopControllerArm.hasPControllerReachedTarget());
-
-//      move away from submersible
-        
-//        driveStraight(DRIVE_SPEED, -2, 0.0);
-//        pBottomControllerArm.setSetPoint(0);
-//        pTopControllerArm.setSetPoint(0);
-//        turnToHeading(turnSpeed, 90);
-//        holdHeading(turnSpeed, 90, 0.5);
-//      move towards ascent zone
-//        driveStraight(DRIVE_SPEED, 40, 90);
-//        turnToHeading(turnSpeed, 0);
-//        holdHeading(turnSpeed,0, 0.5);
-////      move into ascent zone
-//        driveStraight(DRIVE_SPEED, 36, 0);
-////      level 1 ascent position
-//        turnToHeading(turnSpeed, 270);
-//        holdHeading(turnSpeed, 270, 0.5);
-//        driveStraight(DRIVE_SPEED, 5, 270);
-////      level 1 ascent
-//        pTopControllerArm.setSetPoint(105);
-//        pBottomControllerArm.setSetPoint(105);
-        //holdHeading(DRIVE_SPEED, 0.0, 1);
-        moveRobot(0, 0);
-
-        telemetry.addData("Path", "Complete");
-        telemetry.update();
-        sleep(1000);  // Pause to display last telemetry message.
+        turnToHeading(TURN_SPEED, -90.0);               // Turn  CW  to 0 Degrees
+        holdHeading(TURN_SPEED, -90.0, .25);    // Hold  0 Deg heading for 1 second
+        driveStraight(DRIVE_SPEED, 50, -90);
     }
 
     /*
