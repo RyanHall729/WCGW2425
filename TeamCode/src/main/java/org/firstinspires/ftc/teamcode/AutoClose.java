@@ -107,6 +107,7 @@ public class AutoClose extends LinearOpMode {
 
     // These variable are declared here (as class members) so they can be updated in various methods,
     // but still be displayed by sendTelemetry()
+    public ElapsedTime scoreTimer = null;
     private double  targetHeading = 0;
     private double  driveSpeed    = 0;
     private double  turnSpeed     = 0;
@@ -132,16 +133,16 @@ public class AutoClose extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    static final double     DRIVE_SPEED             = 0.2;     // Max driving speed for better distance accuracy.
-    static final double     TURN_SPEED              = 0.1;     // Max turn speed to limit turn rate.
-    static final double     HEADING_THRESHOLD       = 0.5 ;    // How close must the heading get to the target before moving to next step.
+    static final double     DRIVE_SPEED             = 0.015;     // Max driving speed for better distance accuracy.
+    static final double     TURN_SPEED              = 0.015;     // Max turn speed to limit turn rate.
+    static final double     HEADING_THRESHOLD       = 0.1 ;    // How close must the heading get to the target before moving to next step.
                                                                // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
     // Increase these numbers if the heading does not correct strongly enough (eg: a heavy robot or using tracks)
     // Decrease these numbers if the heading does not settle on the correct value (eg: very agile robot with omni wheels)
-    static final double     P_TURN_GAIN            = 0.03;     // Larger is more responsive, but also less stable.
-    static final double     P_DRIVE_GAIN           = 0.02;     // Larger is more responsive, but also less stable.
+    static final double     P_TURN_GAIN            = 0.3;     // Larger is more responsive, but also less stable.
+    static final double     P_DRIVE_GAIN           = 0.2;     // Larger is more responsive, but also less stable.
 
 
     @Override
@@ -238,7 +239,7 @@ public class AutoClose extends LinearOpMode {
 //
 //        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
 
-        driveStraight(DRIVE_SPEED, 29.5, 0.0); //*************************************************************************
+        driveStraight(DRIVE_SPEED, 10, 0.0); //*************************************************************************
 //        holdHeading(DRIVE_SPEED, 0.0, 1);                   //*************************************************************************
         //moveRobot(0, 0);
 
@@ -310,11 +311,12 @@ public class AutoClose extends LinearOpMode {
                 (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy())) {
 
                 // Determine required steering to keep on heading
-                turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
+                turnSpeed = -getSteeringCorrection(heading, P_DRIVE_GAIN); //**********************************made negative by mcg***********************
+
 
                 // if driving in reverse, the motor correction also needs to be reversed//***********************************************
                 if (distance < 0)
-                    turnSpeed *= 0.05; //***********************************************************************************************
+                    turnSpeed *= -1.0;
 
                 // Apply the turning correction to the current driving speed.
                 moveRobot(driveSpeed, turnSpeed);
@@ -357,7 +359,8 @@ public class AutoClose extends LinearOpMode {
         while (opModeIsActive() && (Math.abs(headingError) > HEADING_THRESHOLD)) {
 
             // Determine required steering to keep on heading
-            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+            turnSpeed = -getSteeringCorrection(heading, P_TURN_GAIN); //**********************************made negative by mcg***********************
+
 
             // Clip the speed to the maximum permitted value.
             turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);
@@ -394,7 +397,8 @@ public class AutoClose extends LinearOpMode {
         // keep looping while we have time remaining.
         while (opModeIsActive() && (holdTimer.time() < holdTime)) {
             // Determine required steering to keep on heading
-            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+            turnSpeed = -getSteeringCorrection(heading, P_TURN_GAIN); //**********************************made negative by mcg***********************
+
 
             // Clip the speed to the maximum permitted value.
             turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);

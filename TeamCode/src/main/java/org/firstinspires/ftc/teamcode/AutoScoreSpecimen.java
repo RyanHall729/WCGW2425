@@ -32,9 +32,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -101,6 +104,14 @@ public class AutoScoreSpecimen extends LinearOpMode {
     public DcMotor leftBack = null;
     public DcMotor rightFront = null;
     public DcMotor rightBack = null;
+    public CRServo intake2 = null;
+    public Servo extender = null;
+    public Servo wrist = null;
+    public DcMotorEx elbowTop = null;
+    public DcMotorEx elbowBottom = null;
+    public Pcontroller pTopControllerArm = new Pcontroller(.005);
+    public Pcontroller pBottomControllerArm = new Pcontroller(.005);
+    public ElapsedTime scoreTimer = null;
     private IMU             imu         = null; // Control/Expansion Hub IMU
 
     private double          headingError  = 0;
@@ -116,9 +127,8 @@ public class AutoScoreSpecimen extends LinearOpMode {
     private int rightFrontTarget = 0;
     private int leftBackTarget = 0;
     private int rightBackTarget = 0;
-    TeleOp teleOp = new TeleOp();
-    public Pcontroller pTopControllerArm = new Pcontroller(.005);
-    public Pcontroller pBottomControllerArm = new Pcontroller(.005);
+//    TeleOp teleOp = new TeleOp();
+
     ElapsedTime waitTimerPlace = new ElapsedTime();
 
 
@@ -136,9 +146,9 @@ public class AutoScoreSpecimen extends LinearOpMode {
 
     // These constants define the desired driving/control characteristics
     // They can/should be tweaked to suit the specific robot drive train.
-    static final double     DRIVE_SPEED             = 0.4;     // Max driving speed for better distance accuracy.
-    static final double     TURN_SPEED              = 0.2;     // Max turn speed to limit turn rate.
-    static final double     HEADING_THRESHOLD       = 1.0 ;    // How close must the heading get to the target before moving to next step.
+    static final double     DRIVE_SPEED             = 0.5;     // Max driving speed for better distance accuracy.
+    static final double     TURN_SPEED              = 0.5;     // Max turn speed to limit turn rate.
+    static final double     HEADING_THRESHOLD       = 0.1 ;    // How close must the heading get to the target before moving to next step.
                                                                // Requiring more accuracy (a smaller number) will often make the turn take longer to get into the final position.
     // Define the Proportional control coefficient (or GAIN) for "heading control".
     // We define one value when Turning (larger errors), and the other is used when Driving straight (smaller errors).
@@ -152,6 +162,25 @@ public class AutoScoreSpecimen extends LinearOpMode {
     public void runOpMode() {
 
         // Initialize the drive system variables.
+        elbowTop = hardwareMap.get(DcMotorEx.class, "elbowTop");
+        elbowBottom = hardwareMap.get(DcMotorEx.class, "elbowBottom");
+        intake2 = hardwareMap.get(CRServo.class, "intake2"); // expansion hub port 0
+        intake2.setPower(0);
+        extender = hardwareMap.get(Servo.class, "extender");//port 1
+        //extender.setPosition(0.0); // use position 0 when installing the extender, otherwise use the position 6
+        extender.setPosition(0.59);
+        extender.setPosition(0.57);
+        wrist = hardwareMap.get(Servo.class, "wrist");//expansion hub port 1
+        wrist.setPosition(.425);
+        elbowTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elbowBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        elbowTop.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        elbowTop.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        elbowBottom.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        elbowTop.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        elbowBottom.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+
 //        leftDrive  = hardwareMap.get(DcMotor.class, "left_drive");
 //        rightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -173,6 +202,9 @@ public class AutoScoreSpecimen extends LinearOpMode {
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setDirection(DcMotor.Direction.FORWARD);
+        elbowTop.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbowBottom.setDirection(DcMotorSimple.Direction.FORWARD);
+        intake2.setDirection(DcMotorSimple.Direction.REVERSE);
 
 
         /* The next two lines define Hub orientation.
@@ -249,11 +281,30 @@ public class AutoScoreSpecimen extends LinearOpMode {
 //        driveStraight(DRIVE_SPEED,-48.0, 0.0);    // Drive in Reverse 48" (should return to approx. staring position)
 
 //      beginning of Auto
-        driveStraight(DRIVE_SPEED, 31, 0.0);
-        driveStraight(DRIVE_SPEED, -1, 0.0);
-//      attach specimen
-        pTopControllerArm.setSetPoint(1212);
-        pBottomControllerArm.setSetPoint(1237);
+        driveStraight(DRIVE_SPEED, 29, 0.0);
+        turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
+        holdHeading( TURN_SPEED,   0.0, 1);    // Hold  0 Deg heading for 1 second
+//      `  attach specimen
+//        pTopControllerArm.setSetPoint(1212);
+//        pBottomControllerArm.setSetPoint(1237);
+        double elbowSpeed = 200;
+        scoreTimer.reset();
+
+       while(scoreTimer.seconds() < 3.0 && opModeIsActive()) {
+            elbowTop.setVelocity(elbowSpeed);
+            elbowBottom.setVelocity(elbowSpeed);
+            pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
+            pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
+//           pTopControllerArm.setSetPoint(1220);
+//           pBottomControllerArm.setSetPoint(1220);
+//            extender.setPosition(0.2);
+            telemetry.addData("Are we there yet", elbowTop.getCurrentPosition());
+            telemetry.update();
+            sleep(5000);  // Pause to display last telemetry message.
+        }
+
+//        }while!(pTopControllerArm.hasPControllerReachedTarget());
+
 //      move away from submersible
         
 //        driveStraight(DRIVE_SPEED, -2, 0.0);
@@ -345,7 +396,7 @@ public class AutoScoreSpecimen extends LinearOpMode {
                 (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy())) {
 
                 // Determine required steering to keep on heading
-                turnSpeed = getSteeringCorrection(heading, P_DRIVE_GAIN);
+                turnSpeed = -getSteeringCorrection(heading, P_DRIVE_GAIN); //**********************************made negative by mcg***********************
 
                 // if driving in reverse, the motor correction also needs to be reversed
                 if (distance < 0)
@@ -392,7 +443,7 @@ public class AutoScoreSpecimen extends LinearOpMode {
         while (opModeIsActive() && (Math.abs(headingError) > HEADING_THRESHOLD)) {
 
             // Determine required steering to keep on heading
-            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+            turnSpeed = -getSteeringCorrection(heading, P_TURN_GAIN); // *********************************made negative by mcg ***************************
 
             // Clip the speed to the maximum permitted value.
             turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);
@@ -429,7 +480,7 @@ public class AutoScoreSpecimen extends LinearOpMode {
         // keep looping while we have time remaining.
         while (opModeIsActive() && (holdTimer.time() < holdTime)) {
             // Determine required steering to keep on heading
-            turnSpeed = getSteeringCorrection(heading, P_TURN_GAIN);
+            turnSpeed = -getSteeringCorrection(heading, P_TURN_GAIN); //***************************made negative by mcg ****************
 
             // Clip the speed to the maximum permitted value.
             turnSpeed = Range.clip(turnSpeed, -maxTurnSpeed, maxTurnSpeed);

@@ -117,7 +117,7 @@ public class TeleOp extends LinearOpMode {
     public boolean crServoOn;
     public boolean bAlreadyPressed;
     public boolean extenderMoving = false;
-    public double elbowSpeed = -700;
+    public double elbowSpeed = -600;
     public double intakePower = 0;
     public double degreesPerElbowTick;
     public double currentArmAngle;
@@ -225,11 +225,11 @@ public class TeleOp extends LinearOpMode {
 
         //intake = hardwareMap.get(CRServo.class, "intake");
         pTopControllerArm.setInputRange(0, elbowTopMaxTicks);
-        pTopControllerArm.setOutputRange(.01,0.60);
+        pTopControllerArm.setOutputRange(.01,0.90);  //*********************************************************************
         pTopControllerArm.setThresholdValue(2);
 
         pBottomControllerArm.setInputRange(0, elbowBottomMaxTicks);
-        pBottomControllerArm.setOutputRange(.01,0.60);
+        pBottomControllerArm.setOutputRange(.01,0.90); //*******************************************************************
         pBottomControllerArm.setThresholdValue(2);
         telemetry.update();
 
@@ -396,7 +396,7 @@ public class TeleOp extends LinearOpMode {
             else {
                  updateArmPosition();
              }
-            if(rumbleTimer.seconds() >= 120 && !hasRumbled)
+            if(rumbleTimer.seconds() >= 105 && !hasRumbled)
             {
                 gamepad1.rumble(100);
                 hasRumbled = true;
@@ -445,7 +445,7 @@ public class TeleOp extends LinearOpMode {
                 elbowBottom.setVelocity(elbowSpeed);
                 pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
                 pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
-                elbowSpeed = -700;
+                elbowSpeed = -600;
               //  pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition() - 5);
                // pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition() - 5);
             }
