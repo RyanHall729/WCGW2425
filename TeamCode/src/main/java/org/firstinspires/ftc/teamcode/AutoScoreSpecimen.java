@@ -220,8 +220,6 @@ public class AutoScoreSpecimen extends LinearOpMode {
         imu.initialize(new IMU.Parameters(orientationOnRobot));
         imu.resetYaw();
 
-
-
         // Ensure the robot is stationary.  Reset the encoders and set the motors to BRAKE mode
 //        leftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        rightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -265,22 +263,25 @@ public class AutoScoreSpecimen extends LinearOpMode {
         driveStraight(DRIVE_SPEED, 29, 0.0);
         turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
         holdHeading( TURN_SPEED,   0.0, .25);    // Hold  0 Deg heading for 1 second
-//      `  attach specimen
+        driveStraight(DRIVE_SPEED, -1, 0.0);      // back off an inch
+        turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
+        holdHeading( TURN_SPEED,   0.0, .25);    // Hold  0 Deg heading for 1 second
+//      `  position specimen at bar
         elbowTop.setTargetPosition(1200);
         elbowBottom.setTargetPosition(1200);
-       while(elbowTop.isBusy() && opModeIsActive()) {
+        while(elbowTop.isBusy() && opModeIsActive()) {
             elbowTop.setPower(-.5);
             elbowBottom.setPower(-.5);
             pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
             pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
-            pTopControllerArm.setSetPoint(1220);
+         //   pTopControllerArm.setSetPoint(1220);
         }
-//      move away from submersible while lowering a
+//      move away from submersible one inch
         for (stepAway = 1; stepAway < 6; stepAway++) {
-            driveStraight(DRIVE_SPEED, -1, 0.0);
+            driveStraight(DRIVE_SPEED, -1.5, 0.0);
             turnToHeading(TURN_SPEED, 0.0);               // Turn  CW  to 0 Degrees
-            holdHeading(TURN_SPEED, 0.0, .1);    // Hold  0 Deg heading for 1 second
-            //++++++++
+            holdHeading(TURN_SPEED, 0.0, 0.25);    // Hold  0 Deg heading for 1 second
+            // move away while lowering arm
             elbowTop.setTargetPosition(1200+20*stepAway);
             elbowBottom.setTargetPosition(1200+20*stepAway);
             while(elbowTop.isBusy() && opModeIsActive()) {
@@ -288,30 +289,35 @@ public class AutoScoreSpecimen extends LinearOpMode {
                 elbowBottom.setPower(-.5);
                 pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
                 pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
-                pTopControllerArm.setSetPoint(1200+20*stepAway);
+              //  pTopControllerArm.setSetPoint(1200+20*stepAway);
                 //          pBottomControllerArm.setSetPoint(1220);
             }
         }
-        // move away from submersible without lowering arm and turn toward home
-        driveStraight(DRIVE_SPEED, -15, 0.0);
-        elbowTop.setTargetPosition(20);
-        elbowBottom.setTargetPosition(20);
+        // move away from submersible
+        driveStraight(DRIVE_SPEED, -14, 0.0);
+        turnToHeading( TURN_SPEED,   0.0);               // Turn  CW  to 0 Degrees
+        holdHeading( TURN_SPEED,   0.0, .25);    // Hold  0 Deg heading for 1 second
+
+        elbowTop.setTargetPosition(5);
+        elbowBottom.setTargetPosition(5);
         while(elbowTop.isBusy() && opModeIsActive()) {
             elbowTop.setPower(-.5);
             elbowBottom.setPower(-.5);
             pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
             pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
-            pTopControllerArm.setSetPoint(20);
+          //  pTopControllerArm.setSetPoint(5);
         }
-        // drive to home
+        // turn  and drive to home
 
         turnToHeading(TURN_SPEED, -90.0);               // Turn  CW  to 0 Degrees
         holdHeading(TURN_SPEED, -90.0, .25);    // Hold  0 Deg heading for 1 second
         driveStraight(DRIVE_SPEED, 50, -90);
+
     }
 
-    /*
-     * ====================================================================================================
+
+
+ /*    * ====================================================================================================
      * Driving "Helper" functions are below this line.
      * These provide the high and low level methods that handle driving straight and turning.
      * ====================================================================================================

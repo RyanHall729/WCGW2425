@@ -100,8 +100,8 @@ public class TeleOp extends LinearOpMode {
     public int armPosition = 0;
     public Pcontroller pTopControllerArm = new Pcontroller(.005);
     public Pcontroller pBottomControllerArm = new Pcontroller(.005);
-    public int elbowTopMaxTicks = 2340;
-    public int elbowBottomMaxTicks = 2340;
+    public int elbowTopMaxTicks = 2100; //2340
+    public int elbowBottomMaxTicks = 2100; //2340;
     public int state = 0;
     public boolean statePreValue = false;
     public double sensitivity = 5;
@@ -333,7 +333,6 @@ public class TeleOp extends LinearOpMode {
                 wrist.setPosition(.825);
                 isBusy = true;
             }
-
             //intake-toggle
            if(gamepad2.b)
            {
@@ -413,11 +412,12 @@ public class TeleOp extends LinearOpMode {
             extenderPosition = extender.getPosition();
 
             //finds the degree change per tick increase
+           // degreesPerElbowTick = ((360 - 54.6 - 35.6) / elbowTopMaxTicks);
             degreesPerElbowTick = ((360 - 54.6 - 35.6) / elbowTopMaxTicks);
-
             //calculates the current arm angle using the ticks
-            currentArmAngle = (54.6 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180);
-
+            //currentArmAngle = (54.6 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180);
+            currentArmAngle = (54.6+2.0 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180); //2 degree added to account for the new green intake wheel
+            //currentArmAngle = (55 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180);
             //uses a sin function to determine how far the extender can go out before breaching the extension limit
             maxAllowedExtenderLength = ((21) / Math.sin(currentArmAngle));
 
@@ -436,7 +436,6 @@ public class TeleOp extends LinearOpMode {
 
             //calculates the length of the extender currently
             extenderLength = 17.475 + (0.59 - extenderPosition) * (5.75/(0.59-0.164));
-
             //if the arm goes into the floor, start bringing it up until it is not in the floor
             if (extenderLength > Math.abs(extenderLengthFloor) && currentArmAngle > 275.0 * Math.PI/180)
             {
