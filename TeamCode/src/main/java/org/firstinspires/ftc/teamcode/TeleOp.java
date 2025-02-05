@@ -408,46 +408,49 @@ public class TeleOp extends LinearOpMode {
                 pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
             }
 
+            //roller wheels were added 2.5.25, and this code became unnecessary - commented out to not lose the calculations
             // extension-limit code
-            extenderPosition = extender.getPosition();
+//            extenderPosition = extender.getPosition();
+//
+//            //finds the degree change per tick increase
+//           // degreesPerElbowTick = ((360 - 54.6 - 35.6) / elbowTopMaxTicks);
+//            degreesPerElbowTick = ((360 - 54.6 - 35.6) / elbowTopMaxTicks);
+//            //calculates the current arm angle using the ticks
+//            //currentArmAngle = (54.6 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180);
+//            currentArmAngle = (54.6+2.0 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180); //2 degree added to account for the new green intake wheel
+//            //currentArmAngle = (55 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180);
+//            //uses a sin function to determine how far the extender can go out before breaching the extension limit
+//            maxAllowedExtenderLength = ((21) / Math.sin(currentArmAngle));
+//
+//            //calculates the length of the extender currently
+//            extenderLength = 17.475 + (0.59 - extenderPosition) * (5.75/(0.59-0.164));
+//
+//            // if the extender is too far, start bringing it in until its legal
+//            if(extenderLength > Math.abs(maxAllowedExtenderLength))
+//            {
+//                extender.setPosition(extenderPosition + 0.02);
+//            }
+//
+//            // downward limit code
+//            extenderPosition = extender.getPosition();
+//            extenderLengthFloor = 15.375 / Math.cos(currentArmAngle);
+//
+//            //calculates the length of the extender currently
+//            extenderLength = 17.475 + (0.59 - extenderPosition) * (5.75/(0.59-0.164));
+//            //if the arm goes into the floor, start bringing it up until it is not in the floor
+//            if (extenderLength > Math.abs(extenderLengthFloor) && currentArmAngle > 275.0 * Math.PI/180)
+//            {
+//                elbowSpeed = -400;
+//                elbowTop.setVelocity(elbowSpeed);
+//                elbowBottom.setVelocity(elbowSpeed);
+//                pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
+//                pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
+//                elbowSpeed = -600;
+//              //  pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition() - 5);
+//               // pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition() - 5);
+//            }
 
-            //finds the degree change per tick increase
-           // degreesPerElbowTick = ((360 - 54.6 - 35.6) / elbowTopMaxTicks);
-            degreesPerElbowTick = ((360 - 54.6 - 35.6) / elbowTopMaxTicks);
-            //calculates the current arm angle using the ticks
-            //currentArmAngle = (54.6 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180);
-            currentArmAngle = (54.6+2.0 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180); //2 degree added to account for the new green intake wheel
-            //currentArmAngle = (55 + (elbowTop.getCurrentPosition()) * (degreesPerElbowTick)) * (Math.PI / 180);
-            //uses a sin function to determine how far the extender can go out before breaching the extension limit
-            maxAllowedExtenderLength = ((21) / Math.sin(currentArmAngle));
 
-            //calculates the length of the extender currently
-            extenderLength = 17.475 + (0.59 - extenderPosition) * (5.75/(0.59-0.164));
-
-            // if the extender is too far, start bringing it in until its legal
-            if(extenderLength > Math.abs(maxAllowedExtenderLength))
-            {
-                extender.setPosition(extenderPosition + 0.02);
-            }
-
-            // downward limit code
-            extenderPosition = extender.getPosition();
-            extenderLengthFloor = 15.375 / Math.cos(currentArmAngle);
-
-            //calculates the length of the extender currently
-            extenderLength = 17.475 + (0.59 - extenderPosition) * (5.75/(0.59-0.164));
-            //if the arm goes into the floor, start bringing it up until it is not in the floor
-            if (extenderLength > Math.abs(extenderLengthFloor) && currentArmAngle > 275.0 * Math.PI/180)
-            {
-                elbowSpeed = -400;
-                elbowTop.setVelocity(elbowSpeed);
-                elbowBottom.setVelocity(elbowSpeed);
-                pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition());
-                pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition());
-                elbowSpeed = -600;
-              //  pTopControllerArm.setSetPoint(elbowTop.getCurrentPosition() - 5);
-               // pBottomControllerArm.setSetPoint(elbowBottom.getCurrentPosition() - 5);
-            }
 
             // state-machines - - - - - - - - - - - - - - - - - - - - - - -
            switch(teleopStates)

@@ -278,9 +278,9 @@ public class AutoScoreSpecimen extends LinearOpMode {
         }
 //      move away from submersible one inch
         for (stepAway = 1; stepAway < 6; stepAway++) {
-            driveStraight(DRIVE_SPEED, -1.5, 0.0);
+            driveStraight(DRIVE_SPEED, -2, 0.0);
             turnToHeading(TURN_SPEED, 0.0);               // Turn  CW  to 0 Degrees
-            holdHeading(TURN_SPEED, 0.0, 0.25);    // Hold  0 Deg heading for 1 second
+            holdHeading(TURN_SPEED, 0.0, 0.2);    // Hold  0 Deg heading for 1 second
             // move away while lowering arm
             elbowTop.setTargetPosition(1200+20*stepAway);
             elbowBottom.setTargetPosition(1200+20*stepAway);
