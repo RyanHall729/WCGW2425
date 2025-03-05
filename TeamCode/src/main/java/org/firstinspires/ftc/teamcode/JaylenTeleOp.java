@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -60,7 +61,7 @@ public class JaylenTeleOp extends OpMode
     // = null;
    private DcMotor armTop = null;
    private DcMotor armBottom = null;
-   private Servo jaw = null;
+   private CRServo jaw = null;
 
 //   private CRServo intake = null;
 
@@ -71,7 +72,6 @@ public class JaylenTeleOp extends OpMode
     enum ServoStates
     {
         SERVO_ZERO,
-        SERVO_HALF,
         SERVO_FULL
 
     }
@@ -93,10 +93,16 @@ public class JaylenTeleOp extends OpMode
 
         armTop = hardwareMap.get(DcMotor.class, "armTop");
         armBottom = hardwareMap.get(DcMotor.class, "armBottom");
-        jaw = hardwareMap.get(Servo.class, "jaw");
+        jaw = hardwareMap.get(CRServo.class, "jaw");
 
         armTop.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         armBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        armBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        jaw.setDirection(DcMotorSimple.Direction.REVERSE);
+        armTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
 
 //        intake = hardwareMap.get(CRServo.class, "intake");
 
@@ -143,9 +149,10 @@ public class JaylenTeleOp extends OpMode
             armBottom.setPower(-1);
         }
 
-        else if(!gamepad1.dpad_up)
+        else
         {
-            armTop.ZeroPowerBehavior.BRAKE;
+            armTop.setPower(0);
+            armBottom.setPower(0);
         }
 
         switch (servoStates)
@@ -154,34 +161,32 @@ public class JaylenTeleOp extends OpMode
 
             case SERVO_ZERO:
             {
-                if(gamepad1.triangle)
+
+                if(gamepad1.dpad_left)
                 {
-                    jaw.setPosition(0);
+                    jaw.setPower(0);
                     timer.reset();
-                    servoStates = ServoStates.SERVO_HALF;
+                    servoStates = ServoStates.SERVO_FULL;
                 }
                 break;
             }
-            case SERVO_HALF:
-            {
-                //add a timer to let this move
-                if(timer.milliseconds()>1000)
-                 {
-                    jaw.setPosition(0.5);
 
-                 }
-
-                servoStates = ServoStates.SERVO_FULL;
-                break;
-            }
             case SERVO_FULL:
             {
-                if(timer.milliseconds()>1000)
+                if(gamepad1.dpad_right)
                 {
-                    jaw.setPosition(1);
+                    jaw.setPower(1);
                     timer.reset();
+
+
+
                 }
-            servoStates = ServoStates.SERVO_ZERO;
+                else if(timer.milliseconds() > 500)
+                {
+                    jaw.setPower(0);
+                    servoStates = ServoStates.SERVO_ZERO;
+                }
+
             break;
             }
 
@@ -215,9 +220,11 @@ public class JaylenTeleOp extends OpMode
 
     telemetry.addData("run time: ",runtime.toString());
 //        telemetry.addData("intake power", intake.getPower());
-        telemetry.addData("arm power", arm.getPower());
-        telemetry.addData("jaw position", jaw.getPosition());
+        telemetry.addData("top power", armTop.getPower());
+        telemetry.addData("bottom power",armBottom.getPower());
+        telemetry.addData("jaw position", jaw.getPower());
         telemetry.addData("state: ", servoStates);
+        telemetry.addData("timer: ", timer.milliseconds());
     }
 
     /*
