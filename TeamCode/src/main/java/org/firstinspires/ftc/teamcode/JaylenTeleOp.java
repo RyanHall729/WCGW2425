@@ -62,6 +62,11 @@ public class JaylenTeleOp extends OpMode
    private DcMotor armTop = null;
    private DcMotor armBottom = null;
    private CRServo jaw = null;
+   private DcMotor frontLeft = null;
+   private DcMotor frontRight = null;
+   private DcMotor backLeft = null;
+   private DcMotor backRight = null;
+
 
 //   private CRServo intake = null;
 
@@ -94,15 +99,24 @@ public class JaylenTeleOp extends OpMode
         armTop = hardwareMap.get(DcMotor.class, "armTop");
         armBottom = hardwareMap.get(DcMotor.class, "armBottom");
         jaw = hardwareMap.get(CRServo.class, "jaw");
+        frontLeft = hardwareMap.get(DcMotor.class,"front left motor");
+        frontRight = hardwareMap.get(DcMotor.class,"front right motor");
+        backLeft = hardwareMap.get(DcMotor.class,"back left motor");
+        backRight = hardwareMap.get(DcMotor.class,"back right motor");
+
 
         armTop.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         armBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         armBottom.setDirection(DcMotorSimple.Direction.REVERSE);
         jaw.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         armTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         armBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 //        intake = hardwareMap.get(CRServo.class, "intake");
 
@@ -155,6 +169,30 @@ public class JaylenTeleOp extends OpMode
             armBottom.setPower(0);
         }
 
+        if(gamepad1.left_bumper)
+        {
+            frontLeft.setPower(1);
+            frontRight.setPower(1);
+            backLeft.setPower(1);
+            backRight.setPower(1);
+        }
+
+        if(gamepad1.right_bumper)
+        {
+            frontLeft.setPower(-1);
+            frontRight.setPower(-1);
+            backLeft.setPower(-1);
+            backRight.setPower(-1);
+        }
+
+        else
+        {
+            frontLeft.setPower(0);
+            frontRight.setPower(0);
+            backLeft.setPower(0);
+            backRight.setPower(0);
+        }
+
         switch (servoStates)
         {
 
@@ -162,7 +200,7 @@ public class JaylenTeleOp extends OpMode
             case SERVO_ZERO:
             {
 
-                if(gamepad1.dpad_left)
+                if(gamepad1.dpad_right)
                 {
                     jaw.setPower(0);
                     timer.reset();
@@ -173,17 +211,11 @@ public class JaylenTeleOp extends OpMode
 
             case SERVO_FULL:
             {
-                if(gamepad1.dpad_right)
-                {
                     jaw.setPower(1);
-                    timer.reset();
-
-
-
-                }
-                else if(timer.milliseconds() > 500)
+                if(timer.milliseconds() > 1000)
                 {
                     jaw.setPower(0);
+                    timer.reset();
                     servoStates = ServoStates.SERVO_ZERO;
                 }
 
@@ -225,6 +257,10 @@ public class JaylenTeleOp extends OpMode
         telemetry.addData("jaw position", jaw.getPower());
         telemetry.addData("state: ", servoStates);
         telemetry.addData("timer: ", timer.milliseconds());
+        telemetry.addData("front left power", frontLeft.getPower());
+        telemetry.addData("front right power", frontRight.getPower());
+        telemetry.addData("back left power", backLeft.getPower());
+        telemetry.addData("back right power", backRight.getPower());
     }
 
     /*
