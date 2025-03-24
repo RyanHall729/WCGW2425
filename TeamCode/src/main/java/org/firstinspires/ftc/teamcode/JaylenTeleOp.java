@@ -66,6 +66,8 @@ public class JaylenTeleOp extends OpMode
    private DcMotor frontRight = null;
    private DcMotor backLeft = null;
    private DcMotor backRight = null;
+   private Pcontroller armTopPController = new Pcontroller(0.005);
+   private Pcontroller armBottomPController = new Pcontroller(0.005);
 
 
 //   private CRServo intake = null;
@@ -212,22 +214,21 @@ public class JaylenTeleOp extends OpMode
         {
             armTop.setPower(1);
             armBottom.setPower(1);
+            armTopPController.setSetPoint(armTop.getCurrentPosition());
+            armBottomPController.setSetPoint(armTop.getCurrentPosition());
         }
 
         else if(gamepad1.dpad_down)
         {
             armTop.setPower(-1);
             armBottom.setPower(-1);
+            armTopPController.setSetPoint(armTop.getCurrentPosition());
+            armBottomPController.setSetPoint(armTop.getCurrentPosition());
         }
 
         else
         {
-            armTop.setPower(0);
-            armBottom.setPower(0);
-        }
-
-        {
-
+            updateArmPosition();
         }
 
         switch (servoStates)
@@ -306,7 +307,32 @@ public class JaylenTeleOp extends OpMode
     @Override
     public void stop() {
     }
+    public void updateArmPosition ()
+    {
+        int topArmMotorPosition = armTop.getCurrentPosition();
+        int bottomArmMotorPosition = armBottom.getCurrentPosition();
 
+        if (topArmMotorPosition < armTopPController.setPoint)
+        {
+            armTop.setPower(.01 + armTopPController.getComputedOutput(topArmMotorPosition));
+        }
+        else
+        {
+            armTop.setPower(.01 - armTopPController.getComputedOutput(topArmMotorPosition));
+        }
+
+        if (bottomArmMotorPosition < armBottomPController.setPoint)
+        {
+            armBottom.setPower(.01 + armBottomPController.getComputedOutput(bottomArmMotorPosition));
+        }
+        else
+        {
+
+            armBottom.setPower(.01 - armBottomPController.getComputedOutput(bottomArmMotorPosition));
+        }
+
+
+    }
 }
 /*print("Hello world"
    * DcMotorSimple
