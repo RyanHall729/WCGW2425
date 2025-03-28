@@ -82,14 +82,20 @@ public class TShirtCannon extends OpMode
 
     @Override
     public void init() {
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("top left power", topLeft.getPower());
-        telemetry.addData("top right power", topRight.getPower());
-        telemetry.addData("bottom left power", bottomLeft.getPower());
-        telemetry.addData("bottom right power", bottomRight.getPower());
-        telemetry.addData("cannon rotate power", cannonRotater.getPower());
-        telemetry.addData("cannon rotate power", cannonTilter.getPower());
-
+       topLeft = hardwareMap.get(DcMotor.class, "topLeft");
+        topRight = hardwareMap.get(DcMotor.class, "topRight");
+        bottomLeft = hardwareMap.get(DcMotor.class, "bottomLeft");
+        bottomRight = hardwareMap.get(DcMotor.class, "bottomRight");
+        cannonTilter = hardwareMap.get(DcMotor.class, "cannonTilter");
+        cannonRotater = hardwareMap.get(DcMotor.class, "cannonRotater");
+        //Adds all motors to hardwear map
+        topLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bottomLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        topRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        bottomRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        cannonRotater.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        cannonTilter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //set all motors to brake when there's no power
     }
 
     /*
@@ -151,6 +157,14 @@ public class TShirtCannon extends OpMode
             cannonRotater.setPower(0);
             cannonTilter.setPower(0);
         }
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("top left power", topLeft.getPower());
+        telemetry.addData("top right power", topRight.getPower());
+        telemetry.addData("bottom left power", bottomLeft.getPower());
+        telemetry.addData("bottom right power", bottomRight.getPower());
+        telemetry.addData("cannon rotate power", cannonRotater.getPower());
+        telemetry.addData("cannon rotate power", cannonTilter.getPower());
 
     }
 }
